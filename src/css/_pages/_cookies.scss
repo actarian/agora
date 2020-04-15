@@ -1,0 +1,21 @@
+#acceptcookie {
+	position: fixed;
+	bottom: 15px;
+	width: 100%;
+	max-width: 960px;
+	left: 50%;
+	transform: translateX(-50%);
+	padding: 10px 15px;
+	font-size: 0.9em;
+	line-height: 1;
+	text-align: center;
+	background: white;
+	border: 1px solid #b9bccd;
+	z-index: 10000;
+
+	a,
+	button {
+		text-decoration: underline;
+		margin-left: 5px;
+	}
+}

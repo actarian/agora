@@ -1,0 +1,115 @@
+[bim-library] {
+	color: $foreground;
+
+	.icon--background {
+		position: absolute;
+
+		@include media-up(md) {
+			width: 30vw;
+			height: 30vw;
+			right: 0;
+			margin-top: 150px;
+			fill: rgba($foreground-primary, 0.1);
+		}
+
+		@include media-down(sm) {
+			width: 100vw;
+			height: 100vw;
+			left: -15vw;
+			margin-top: 0;
+			fill: rgba($foreground-primary, .05);
+		}
+	}
+
+	.section--serp {
+		border-top: 2px solid rgba($foreground, 0.05);
+	}
+}
+
+.section--hint {
+	position: fixed;
+	bottom: 15px;
+	right: 10px;
+	width: 100%;
+	max-width: 230px;
+	padding: 10px;
+	text-align: center;
+	font-size: 19px;
+	background: #fff;
+	color: $foreground-primary;
+	box-shadow: 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+	z-index: 100;
+
+	.btn--cta {
+		background: #f7bfc1;
+		color: $foreground-primary;
+
+		&:hover {
+			background: $foreground-primary;
+			color: $foreground-negative;
+		}
+	}
+}
+
+.bim-modal-more {
+	max-width: 1200px;
+	font-size: 15px;
+
+	.modal__header {
+		position: sticky;
+		top: 0;
+		z-index: 100;
+		background: white;
+		background: #b9bdcd;
+		// box-shadow: 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+	}
+
+	.picture {
+		padding: 20px;
+		background: white;
+		box-shadow: none;
+	}
+
+	.title {
+		font-size: 36px;
+		margin-bottom: 0.5em;
+
+		@include media-down(sm) {
+			font-size: 30px;
+		}
+	}
+
+	.abstract {
+		font-size: 19px;
+		margin-bottom: 1em;
+
+		@include media-down(sm) {
+			font-size: 19px;
+		}
+	}
+
+	.description {
+		margin-bottom: 1em;
+
+		p {
+			padding-bottom: 1em;
+		}
+	}
+
+	@include media-up(sm) {
+		padding: 0 40px;
+
+		.modal__header {
+			margin-left: -40px;
+			margin-right: -40px;
+		}
+	}
+}
+
+.bim-modal-hint {
+	max-width: 700px;
+
+	.title {
+		@extend %subtitle;
+	}
+}

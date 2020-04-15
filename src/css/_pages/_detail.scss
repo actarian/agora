@@ -1,0 +1,107 @@
+.section--detail {
+	padding: 80px 0;
+
+	.group--content {
+		.title {
+			@extend %title-detail;
+		}
+
+		.abstract {
+			@extend %abstract-detail;
+		}
+
+		.description {
+			@extend %description-detail;
+		}
+	}
+
+	.group--detail {
+		margin-bottom: 50px;
+
+		.title {
+			line-height: 1.2;
+			font-weight: $font-bold;
+			text-transform: uppercase;
+			margin: 0;
+		}
+
+		svg {
+			margin-right: 5px;
+			height: 17px;
+			width: 17px;
+		}
+
+		.btn--cta {
+			margin: 10px 0 40px 0;
+		}
+	}
+
+	.group--share {
+
+		.title {
+			line-height: 1.2;
+			font-weight: $font-bold;
+			text-transform: uppercase;
+			margin: 0;
+		}
+
+		ul {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+
+			li {
+				display: inline-block;
+				padding: 0 5px;
+
+				&:first-child {
+					padding-left: 0;
+				}
+
+				svg {
+					height: 17px;
+					width: 17px;
+				}
+			}
+		}
+	}
+
+	.link {
+		display: inline;
+	}
+
+	@include media-down(sm) {
+		padding: 40px 0;
+
+		.group--detail {
+			margin-bottom: 0;
+
+			.btn--cta {
+				margin: 10px 0 10px;
+			}
+		}
+	}
+}
+
+@include media-up(lg) {}
+
+@include media-down(md) {}
+
+@include media-down(xs) {}
+
+// Prodotti Utilizzati
+.section--products-related {
+	padding: 80px 0;
+
+	.group--title {
+		justify-content: center;
+
+		.title {
+			font-size: 50px;
+		}
+	}
+
+	@include media-down(sm) {
+		padding: 40px 0;
+	}
+}

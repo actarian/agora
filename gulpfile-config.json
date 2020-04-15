@@ -1,0 +1,63 @@
+﻿{
+  "targets": {
+    "browser": {
+      "compile": [
+        {
+          "input": "src/*.html",
+          "output": "docs/",
+          "minify": true
+        },
+        {
+          "input": "src/css/main.scss",
+          "output": "docs/css/main.css",
+          "minify": true
+        },
+        {
+          "input": "src/js/main.js",
+          "output": {
+            "file": "docs/js/main.js",
+            "format": "umd"
+          },
+          "globals": {
+            "gsap": "gsap",
+            "rxjs": "rxjs",
+            "rxjs/operators": "rxjs.operators",
+            "rxcomp": "rxcomp",
+            "rxcomp-form": "rxcomp.form"
+          },
+          "minify": true
+        },
+        {
+          "input": "src/js/image/image.service.worker.js",
+          "output": {
+            "file": "docs/js/workers/image.service.worker.js",
+            "format": "umd"
+          },
+          "minify": true
+        }
+      ],
+      "bundle": [
+        {
+          "input": [
+            "src/sdk/AgoraRTCSDK-3.0.2.js",
+            "node_modules/rxjs/bundles/rxjs.umd.js",
+            "node_modules/rxcomp/dist/iife/rxcomp.js",
+            "node_modules/rxcomp-form/dist/iife/rxcomp-form.js",
+            "node_modules/gsap/dist/EasePack.js",
+            "node_modules/gsap/dist/gsap.js"
+          ],
+          "output": "docs/js/vendors.js",
+          "minify": true
+        }
+      ]
+    }
+  },
+  "tfs": false,
+  "server": {
+    "root": "./docs",
+    "path": "/agora/",
+    "host": "0.0.0.0",
+    "port": 41678,
+    "log": false
+  }
+}

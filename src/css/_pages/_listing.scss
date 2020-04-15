@@ -1,0 +1,251 @@
+.section--listing {
+	padding: 80px 0 60px 0;
+
+	&__title {
+		@extend %category;
+		margin-bottom: 30px;
+	}
+
+	@include media-down(sm) {
+		padding: 40px 0 10px 0;
+
+		&__title {
+			padding: 0;
+		}
+	}
+
+	@include media-down(xs) {
+		&__title {
+			text-align: center;
+		}
+	}
+}
+
+.section--slides+.section--listing {
+	padding-top: 0;
+}
+
+.section--news {
+	padding: 80px 0;
+
+	.listing--news {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-start;
+
+		@include media-up(lg) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--news {
+				@include as-col(4, 12, $gutter);
+			}
+		}
+
+		@include media-down(md) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--news {
+				@include as-col(6, 12, $gutter);
+			}
+		}
+
+		@include media-down(xs) {
+			.card--news {
+				@include as-col(12, 12, 0);
+			}
+		}
+	}
+
+	@include media-down(sm) {
+		padding: 40px 0;
+	}
+}
+
+.section--events {
+	padding: 80px 0;
+
+	.listing--events {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-start;
+
+		@include media-up(lg) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--event {
+				@include as-col(4, 12, $gutter);
+			}
+		}
+
+		@include media-down(md) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--event {
+				@include as-col(6, 12, $gutter);
+			}
+		}
+
+		@include media-down(xs) {
+			.card--event {
+				@include as-col(12, 12, 0);
+			}
+		}
+	}
+
+	@include media-down(sm) {
+		padding: 40px 0;
+	}
+}
+
+.section--achievements {
+	padding: 80px 0;
+
+	.listing--achievements {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-start;
+
+		@include media-up(lg) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--achievement {
+				@include as-col(4, 12, $gutter);
+			}
+		}
+
+		@include media-down(md) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--achievement {
+				@include as-col(6, 12, $gutter);
+			}
+		}
+
+		@include media-down(xs) {
+			.card--achievement {
+				@include as-col(12, 12, 0);
+			}
+		}
+	}
+
+	@include media-down(sm) {
+		padding: 40px 0;
+	}
+}
+
+.section--products {
+	padding: 80px 0;
+	position: relative;
+	z-index: 1;
+
+	.listing--products {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-start;
+
+		.card--product {
+			margin-bottom: 40px;
+		}
+
+		@include media-up(lg) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--product {
+				@include as-col(4, 12, $gutter);
+			}
+		}
+
+		@include media-down(md) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--product {
+				@include as-col(6, 12, $gutter);
+			}
+		}
+
+		@include media-down(xs) {
+			margin-left: 0;
+			margin-right: 0;
+
+			.card--product {
+				@include as-col(12, 12, 0);
+			}
+		}
+	}
+
+	@include media-down(sm) {
+		padding: 40px 0;
+	}
+}
+
+.section--search {
+	padding: 80px 0;
+
+	&>.container>.content {
+		.title {
+			@extend %title-detail;
+		}
+
+		.abstract {
+			@extend %abstract-detail;
+		}
+
+		.description {
+			@extend %description-detail;
+		}
+	}
+
+	.listing--search {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-start;
+		padding-top: 30px;
+		border-top: 1px solid rgba(#16255b, 0.15);
+
+		@include media-up(lg) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--search {
+				@include as-col(4, 12, $gutter);
+			}
+		}
+
+		@include media-down(md) {
+			$gutter: 30px;
+			margin-left: - $gutter / 2;
+			margin-right: - $gutter / 2;
+
+			.card--search {
+				@include as-col(6, 12, $gutter);
+			}
+		}
+
+		@include media-down(xs) {
+			.card--search {
+				@include as-col(12, 12, 0);
+			}
+		}
+	}
+
+	@include media-down(sm) {
+		padding: 40px 0;
+	}
+}
