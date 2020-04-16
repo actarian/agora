@@ -56,7 +56,7 @@
   "server": {
     "root": "./docs",
     "path": "/agora/",
-    "host": "0.0.0.0",
+    "host": "localhost",
     "port": 41678,
     "log": false
   }

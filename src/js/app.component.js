@@ -9,10 +9,13 @@ const src = STATIC ? '/agora/club-modal.html' : '/Viewdoc.cshtml?co_id=23649';
 
 export default class AppComponent extends Component {
 
+	// !!! require localhost or https
+
 	onInit() {
 		const { node } = getContext(this);
 		node.classList.remove('hidden');
 		// console.log('context', context);
+		/*
 		UserService.user$.pipe(
 			takeUntil(this.unsubscribe$)
 		).subscribe(user => {
@@ -23,87 +26,89 @@ export default class AppComponent extends Component {
 		setTimeout(() => {
 			this.parseQueryString();
 		}, 500);
+		*/
 		this.createClient(() => {
 			this.joinChannel();
 		});
 	}
 
 	createClient(next) {
-		console.log("agora sdk version: " + AgoraRTC.VERSION + " compatible: " + AgoraRTC.checkSystemRequirements());
-		const client = this.client = AgoraRTC.createClient({ mode: 'live', codec: "h264" });
+		console.log('agora sdk version: ' + AgoraRTC.VERSION + ' compatible: ' + AgoraRTC.checkSystemRequirements());
+		const client = this.client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
 		client.init('ab4289a46cd34da6a61fd8d66774b65f', function() {
-			console.log("AgoraRTC client initialized");
+			console.log('AgoraRTC client initialized');
 			next();
 		}, function(error) {
-			console.log("AgoraRTC client init failed", error);
+			console.log('AgoraRTC client init failed', error);
 		});
 		client.on('stream-published', function(event) {
-			console.log("Publish local stream successfully");
+			console.log('Publish local stream successfully');
 		});
 		//subscribe remote stream
 		client.on('stream-added', function(event) {
 			var stream = event.stream;
 			var id = stream.getId();
-			console.log("New stream added: " + id);
+			console.log('New stream added: ' + id);
 			if (id !== this.uid) {
 				client.subscribe(stream, function(error) {
-					console.log("stream subscribe failed", error);
+					console.log('stream subscribe failed', error);
 				});
 			}
 			/*
 			client.subscribe(stream, function(error) {
-				console.log("Subscribe stream failed", error);
+				console.log('Subscribe stream failed', error);
 			});
 			*/
 		});
 		client.on('stream-subscribed', function(event) {
 			var stream = event.stream;
 			var id = stream.getId();
-			console.log("Subscribe remote stream successfully: " + id);
-			const video = document.querySelector('.video');
+			console.log('Subscribe remote stream successfully: ' + id);
+			const video = document.querySelector('.video-other');
 			if (video) {
 				video.setAttribute('id', 'agora_remote_' + id);
 				video.classList.add('playing');
 			}
+			console.log('video', video);
 			stream.play('agora_remote_' + id);
 		});
-		client.on("error", (error) => {
+		client.on('error', (error) => {
 			console.log('Agora', error);
-		})
+		});
 		// Occurs when the peer user leaves the channel; for example, the peer user calls Client.leave.
-		client.on("peer-leave", function(event) {
+		client.on('peer-leave', function(event) {
 			var id = event.uid;
-			console.log("peer-leave id", id);
+			console.log('peer-leave id', id);
 			if (id !== this.uid) {
-				const video = document.querySelector('.video');
+				const video = document.querySelector('.video-other');
 				if (video) {
 					video.classList.remove('playing');
 				}
 			}
 		});
 		// Occurs when the remote stream is removed; for example, a peer user calls Client.unpublish.
-		client.on("stream-removed", function(event) {
+		client.on('stream-removed', function(event) {
 			var stream = event.stream;
 			var id = stream.getId();
 			console.log('stream-removed remote-uid: ', id);
 			if (id !== this.uid) {
-				stream.stop("agora_remote_" + id);
-				const video = document.querySelector('.video');
+				stream.stop('agora_remote_' + id);
+				const video = document.querySelector('.video-other');
 				if (video) {
 					video.classList.remove('playing');
 				}
 			}
 			console.log('stream-removed remote-uid: ', id);
 		});
-		client.on("onTokenPrivilegeWillExpire", function() {
+		client.on('onTokenPrivilegeWillExpire', function() {
 			// After requesting a new token
 			// client.renewToken(token);
-			console.log("onTokenPrivilegeWillExpire");
+			console.log('onTokenPrivilegeWillExpire');
 		});
-		client.on("onTokenPrivilegeDidExpire", function() {
+		client.on('onTokenPrivilegeDidExpire', function() {
 			// After requesting a new token
 			// client.renewToken(token);
-			console.log("onTokenPrivilegeDidExpire");
+			console.log('onTokenPrivilegeDidExpire');
 		});
 	}
 
@@ -113,14 +118,16 @@ export default class AppComponent extends Component {
 		const channelName = 'Channel';
 		const uid = null;
 		client.join(tokenOrKey, channelName, uid, (uid) => {
-			console.log("User " + uid + " join channel successfully");
+			console.log('User ' + uid + ' join channel successfully');
+			// !!! require localhost or https
 			this.detectDevices((devices) => {
+				console.log(devices);
 				if (devices.videos.length && devices.audios.length) {
-					this.publishVideo(uid, microphoneId, cameraId);
+					this.publishVideo(uid, devices.audios[0].deviceId, devices.videos[0].deviceId);
 				};
 			});
 		}, function(error) {
-			console.log("Join channel failed", error);
+			console.log('Join channel failed', error);
 		});
 		// https://console.agora.io/invite?sign=YXBwSWQlM0RhYjQyODlhNDZjZDM0ZGE2YTYxZmQ4ZDY2Nzc0YjY1ZiUyNm5hbWUlM0RaYW1wZXR0aSUyNnRpbWVzdGFtcCUzRDE1ODY5NjM0NDU=// join link expire in 30 minutes
 	}
@@ -131,8 +138,8 @@ export default class AppComponent extends Component {
 				.filter(device => ['audioinput', 'videoinput'].indexOf(device.kind) !== -1)
 				.map((device) => {
 					return {
-						name: device.label,
-						value: device.deviceId,
+						label: device.label,
+						deviceId: device.deviceId,
 						kind: device.kind,
 					};
 				});
@@ -141,26 +148,16 @@ export default class AppComponent extends Component {
 			for (let i = 0; i < devices.length; i++) {
 				const device = devices[i];
 				if ('videoinput' == device.kind) {
-					const name = device.label;
-					const value = device.deviceId;
-					if (!name) {
-						name = "camera-" + videos.length;
-					}
 					videos.push({
-						name: name,
-						value: value,
+						label: device.label || 'camera-' + videos.length,
+						deviceId: device.deviceId,
 						kind: device.kind
 					});
 				}
 				if ('audioinput' == device.kind) {
-					const name = device.label;
-					const value = device.deviceId;
-					if (!name) {
-						name = "microphone-" + audios.length;
-					}
 					audios.push({
-						name: name,
-						value: value,
+						label: device.label || 'microphone-' + videos.length,
+						deviceId: device.deviceId,
 						kind: device.kind
 					});
 				}
@@ -171,7 +168,7 @@ export default class AppComponent extends Component {
 
 	publishVideo(uid, microphoneId, cameraId) {
 		const client = this.client;
-		const localStream = AgoraRTC.createStream({
+		const local = AgoraRTC.createStream({
 			streamID: uid,
 			audio: true,
 			video: true,
@@ -179,32 +176,36 @@ export default class AppComponent extends Component {
 			microphoneId: microphoneId,
 			cameraId: cameraId
 		});
-		localStream.init(function() {
-			console.log("getUserMedia successfully");
-			localStream.play('agora_local');
+		local.init(function() {
+			console.log('getUserMedia successfully');
+			const video = document.querySelector('.video-me');
+			if (video) {
+				video.setAttribute('id', 'agora_local_' + uid);
+				local.play('agora_local_' + uid);
+			}
 			//publish local stream
-			client.publish(localStream, function(error) {
-				console.log("Publish local stream error: " + error);
+			client.publish(local, function(error) {
+				console.log('Publish local stream error: ' + error);
 			});
 		}, function(error) {
-			console.log("getUserMedia failed", error);
+			console.log('getUserMedia failed', error);
 		});
-		this.localStream = localStream;
+		this.local = local;
 	}
 
 	unpublishVideo() {
 		const client = this.client;
-		const localStream = this.localStream;
-		client.unpublish(localStream, function(error) {
-			console.log("unpublish failed");
+		const local = this.local;
+		client.unpublish(local, function(error) {
+			console.log('unpublish failed');
 		});
 	}
 
 	leaveChannel() {
 		client.leave(function() {
-			console.log("Leave channel successfully");
+			console.log('Leave channel successfully');
 		}, function(error) {
-			console.log("Leave channel failed");
+			console.log('Leave channel failed');
 		});
 	}
 
