@@ -16,6 +16,253 @@
     subClass.__proto__ = superClass;
   }
 
+  var AgoraService = /*#__PURE__*/function () {
+    function AgoraService() {
+      this.onStreamPublished = this.onStreamPublished.bind(this);
+      this.onStreamAdded = this.onStreamAdded.bind(this);
+      this.onStreamSubscribed = this.onStreamSubscribed.bind(this);
+      this.onStreamRemoved = this.onStreamRemoved.bind(this);
+      this.onPeerLeaved = this.onPeerLeaved.bind(this);
+      this.onTokenPrivilegeWillExpire = this.onTokenPrivilegeWillExpire.bind(this);
+      this.onTokenPrivilegeDidExpire = this.onTokenPrivilegeDidExpire.bind(this);
+    }
+
+    var _proto = AgoraService.prototype;
+
+    _proto.connect = function connect() {
+      var _this = this;
+
+      this.createClient(function () {
+        _this.joinChannel();
+      });
+    };
+
+    _proto.onError = function onError(error) {
+      console.log('Agora', error);
+    };
+
+    _proto.onStreamPublished = function onStreamPublished(event) {
+      console.log('Publish local stream successfully');
+    };
+
+    _proto.onStreamAdded = function onStreamAdded(event) {
+      var client = this.client;
+      var stream = event.stream;
+      var id = stream.getId();
+      console.log('New stream added: ' + id);
+
+      if (id !== this.uid) {
+        client.subscribe(stream, function (error) {
+          console.log('stream subscribe failed', error);
+        });
+      }
+    };
+
+    _proto.onStreamSubscribed = function onStreamSubscribed(event) {
+      var stream = event.stream;
+      var id = stream.getId();
+      console.log('Subscribe remote stream successfully: ' + id);
+      var video = document.querySelector('.video-other');
+
+      if (video) {
+        video.setAttribute('id', 'agora_remote_' + id);
+        video.classList.add('playing');
+      } // console.log('video', video);
+
+
+      stream.play('agora_remote_' + id);
+    } // Occurs when the remote stream is removed; for example, a peer user calls Client.unpublish.
+    ;
+
+    _proto.onStreamRemoved = function onStreamRemoved(event) {
+      var stream = event.stream;
+      var id = stream.getId();
+      console.log('stream-removed remote-uid: ', id);
+
+      if (id !== this.uid) {
+        stream.stop('agora_remote_' + id);
+        var video = document.querySelector('.video-other');
+
+        if (video) {
+          video.classList.remove('playing');
+        }
+      }
+
+      console.log('stream-removed remote-uid: ', id);
+    };
+
+    _proto.onPeerLeaved = function onPeerLeaved(event) {
+      var id = event.uid;
+      console.log('peer-leave id', id);
+
+      if (id !== this.uid) {
+        var video = document.querySelector('.video-other');
+
+        if (video) {
+          video.classList.remove('playing');
+        }
+      }
+    };
+
+    _proto.onTokenPrivilegeWillExpire = function onTokenPrivilegeWillExpire(event) {
+      // After requesting a new token
+      // client.renewToken(token);
+      console.log('onTokenPrivilegeWillExpire');
+    };
+
+    _proto.onTokenPrivilegeDidExpire = function onTokenPrivilegeDidExpire(event) {
+      // After requesting a new token
+      // client.renewToken(token);
+      console.log('onTokenPrivilegeDidExpire');
+    };
+
+    _proto.createClient = function createClient(next) {
+      console.log('agora sdk version: ' + AgoraRTC.VERSION + ' compatible: ' + AgoraRTC.checkSystemRequirements());
+      var client = this.client = AgoraRTC.createClient({
+        mode: 'live',
+        codec: 'h264'
+      });
+      client.init('ab4289a46cd34da6a61fd8d66774b65f', function () {
+        console.log('AgoraRTC client initialized');
+        next();
+      }, function (error) {
+        console.log('AgoraRTC client init failed', error);
+      });
+      client.on('stream-published', this.onStreamPublished); //subscribe remote stream
+
+      client.on('stream-added', this.onStreamAdded);
+      client.on('stream-subscribed', this.onStreamSubscribed);
+      client.on('error', this.onError); // Occurs when the peer user leaves the channel; for example, the peer user calls Client.leave.
+
+      client.on('peer-leave', this.onPeerLeaved);
+      client.on('stream-removed', this.onStreamRemoved);
+      client.on('onTokenPrivilegeWillExpire', this.onTokenPrivilegeWillExpire);
+      client.on('onTokenPrivilegeDidExpire', this.onTokenPrivilegeDidExpire);
+    };
+
+    _proto.joinChannel = function joinChannel() {
+      var _this2 = this;
+
+      var client = this.client;
+      var tokenOrKey = null;
+      var channelName = 'Channel';
+      var uid = null;
+      client.join(tokenOrKey, channelName, uid, function (uid) {
+        console.log('User ' + uid + ' join channel successfully'); // !!! require localhost or https
+
+        _this2.detectDevices(function (devices) {
+          console.log(devices);
+
+          if (devices.videos.length && devices.audios.length) {
+            _this2.createLocalStream(uid, devices.audios[0].deviceId, devices.videos[0].deviceId);
+          }
+        });
+      }, function (error) {
+        console.log('Join channel failed', error);
+      }); // https://console.agora.io/invite?sign=YXBwSWQlM0RhYjQyODlhNDZjZDM0ZGE2YTYxZmQ4ZDY2Nzc0YjY1ZiUyNm5hbWUlM0RaYW1wZXR0aSUyNnRpbWVzdGFtcCUzRDE1ODY5NjM0NDU=// join link expire in 30 minutes
+    };
+
+    _proto.detectDevices = function detectDevices(next) {
+      AgoraRTC.getDevices(function (devices) {
+        devices.filter(function (device) {
+          return ['audioinput', 'videoinput'].indexOf(device.kind) !== -1;
+        }).map(function (device) {
+          return {
+            label: device.label,
+            deviceId: device.deviceId,
+            kind: device.kind
+          };
+        });
+        var videos = [];
+        var audios = [];
+
+        for (var i = 0; i < devices.length; i++) {
+          var device = devices[i];
+
+          if ('videoinput' == device.kind) {
+            videos.push({
+              label: device.label || 'camera-' + videos.length,
+              deviceId: device.deviceId,
+              kind: device.kind
+            });
+          }
+
+          if ('audioinput' == device.kind) {
+            audios.push({
+              label: device.label || 'microphone-' + videos.length,
+              deviceId: device.deviceId,
+              kind: device.kind
+            });
+          }
+        }
+
+        next({
+          videos: videos,
+          audios: audios
+        });
+      });
+    };
+
+    _proto.createLocalStream = function createLocalStream(uid, microphoneId, cameraId) {
+      var local = this.local = AgoraRTC.createStream({
+        streamID: uid,
+        audio: true,
+        video: true,
+        screen: false,
+        microphoneId: microphoneId,
+        cameraId: cameraId
+      });
+      this.initLocalStream();
+    };
+
+    _proto.initLocalStream = function initLocalStream() {
+      var _this3 = this;
+
+      var client = this.client;
+      var local = this.local;
+      local.init(function () {
+        console.log('getUserMedia successfully');
+        var video = document.querySelector('.video-me');
+
+        if (video) {
+          video.setAttribute('id', 'agora_local_' + local.streamID);
+          local.play('agora_local_' + local.streamID);
+        }
+
+        _this3.publishLocalStream();
+      }, function (error) {
+        console.log('getUserMedia failed', error);
+      });
+    };
+
+    _proto.publishLocalStream = function publishLocalStream() {
+      var client = this.client;
+      var local = this.local; //publish local stream
+
+      client.publish(local, function (error) {
+        console.log('Publish local stream error: ' + error);
+      });
+    };
+
+    _proto.unpublishLocalStream = function unpublishLocalStream() {
+      var client = this.client;
+      var local = this.local;
+      client.unpublish(local, function (error) {
+        console.log('unpublish failed');
+      });
+    };
+
+    _proto.leaveChannel = function leaveChannel() {
+      client.leave(function () {
+        console.log('Leave channel successfully');
+      }, function (error) {
+        console.log('Leave channel failed');
+      });
+    };
+
+    return AgoraService;
+  }();
+
   var STATIC = window.location.port === '41999' || window.location.host === 'actarian.github.io';
   var DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
 
@@ -434,226 +681,28 @@
 
     var _proto = AppComponent.prototype;
 
+    // !!! require localhost or https
     _proto.onInit = function onInit() {
-      var _this = this;
-
       var _getContext = rxcomp.getContext(this),
           node = _getContext.node;
 
       node.classList.remove('hidden'); // console.log('context', context);
 
-      UserService.user$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (user) {
-        console.log('AppComponent.user$', user);
-        _this.user = user;
-
-        _this.pushChanges();
+      /*
+      UserService.user$.pipe(
+      	takeUntil(this.unsubscribe$)
+      ).subscribe(user => {
+      	console.log('AppComponent.user$', user);
+      	this.user = user;
+      	this.pushChanges();
       });
-      setTimeout(function () {
-        _this.parseQueryString();
+      setTimeout(() => {
+      	this.parseQueryString();
       }, 500);
-      this.createClient(function () {
-        _this.joinChannel();
-      });
-    };
+      */
 
-    _proto.createClient = function createClient(next) {
-      console.log('agora sdk version: ' + AgoraRTC.VERSION + ' compatible: ' + AgoraRTC.checkSystemRequirements());
-      var client = this.client = AgoraRTC.createClient({
-        mode: 'live',
-        codec: 'h264'
-      });
-      client.init('ab4289a46cd34da6a61fd8d66774b65f', function () {
-        console.log('AgoraRTC client initialized');
-        next();
-      }, function (error) {
-        console.log('AgoraRTC client init failed', error);
-      });
-      client.on('stream-published', function (event) {
-        console.log('Publish local stream successfully');
-      }); //subscribe remote stream
-
-      client.on('stream-added', function (event) {
-        var stream = event.stream;
-        var id = stream.getId();
-        console.log('New stream added: ' + id);
-
-        if (id !== this.uid) {
-          client.subscribe(stream, function (error) {
-            console.log('stream subscribe failed', error);
-          });
-        }
-        /*
-        client.subscribe(stream, function(error) {
-        	console.log('Subscribe stream failed', error);
-        });
-        */
-
-      });
-      client.on('stream-subscribed', function (event) {
-        var stream = event.stream;
-        var id = stream.getId();
-        console.log('Subscribe remote stream successfully: ' + id);
-        var video = document.querySelector('.video-other');
-
-        if (video) {
-          video.setAttribute('id', 'agora_remote_' + id);
-          video.classList.add('playing');
-        }
-
-        console.log('video', video);
-        stream.play('agora_remote_' + id);
-      });
-      client.on('error', function (error) {
-        console.log('Agora', error);
-      }); // Occurs when the peer user leaves the channel; for example, the peer user calls Client.leave.
-
-      client.on('peer-leave', function (event) {
-        var id = event.uid;
-        console.log('peer-leave id', id);
-
-        if (id !== this.uid) {
-          var video = document.querySelector('.video-other');
-
-          if (video) {
-            video.classList.remove('playing');
-          }
-        }
-      }); // Occurs when the remote stream is removed; for example, a peer user calls Client.unpublish.
-
-      client.on('stream-removed', function (event) {
-        var stream = event.stream;
-        var id = stream.getId();
-        console.log('stream-removed remote-uid: ', id);
-
-        if (id !== this.uid) {
-          stream.stop('agora_remote_' + id);
-          var video = document.querySelector('.video-other');
-
-          if (video) {
-            video.classList.remove('playing');
-          }
-        }
-
-        console.log('stream-removed remote-uid: ', id);
-      });
-      client.on('onTokenPrivilegeWillExpire', function () {
-        // After requesting a new token
-        // client.renewToken(token);
-        console.log('onTokenPrivilegeWillExpire');
-      });
-      client.on('onTokenPrivilegeDidExpire', function () {
-        // After requesting a new token
-        // client.renewToken(token);
-        console.log('onTokenPrivilegeDidExpire');
-      });
-    };
-
-    _proto.joinChannel = function joinChannel() {
-      var _this2 = this;
-
-      var client = this.client;
-      var tokenOrKey = null;
-      var channelName = 'Channel';
-      var uid = null;
-      client.join(tokenOrKey, channelName, uid, function (uid) {
-        console.log('User ' + uid + ' join channel successfully');
-
-        _this2.detectDevices(function (devices) {
-          console.log(devices);
-
-          if (devices.videos.length && devices.audios.length) {
-            _this2.publishVideo(uid, devices.audios[0].deviceId, devices.videos[0].deviceId);
-          }
-        });
-      }, function (error) {
-        console.log('Join channel failed', error);
-      }); // https://console.agora.io/invite?sign=YXBwSWQlM0RhYjQyODlhNDZjZDM0ZGE2YTYxZmQ4ZDY2Nzc0YjY1ZiUyNm5hbWUlM0RaYW1wZXR0aSUyNnRpbWVzdGFtcCUzRDE1ODY5NjM0NDU=// join link expire in 30 minutes
-    };
-
-    _proto.detectDevices = function detectDevices(next) {
-      AgoraRTC.getDevices(function (devices) {
-        devices.filter(function (device) {
-          return ['audioinput', 'videoinput'].indexOf(device.kind) !== -1;
-        }).map(function (device) {
-          return {
-            label: device.label,
-            deviceId: device.deviceId,
-            kind: device.kind
-          };
-        });
-        var videos = [];
-        var audios = [];
-
-        for (var i = 0; i < devices.length; i++) {
-          var device = devices[i];
-
-          if ('videoinput' == device.kind) {
-            videos.push({
-              label: device.label || 'camera-' + videos.length,
-              deviceId: device.deviceId,
-              kind: device.kind
-            });
-          }
-
-          if ('audioinput' == device.kind) {
-            audios.push({
-              label: device.label || 'microphone-' + videos.length,
-              deviceId: device.deviceId,
-              kind: device.kind
-            });
-          }
-        }
-
-        next({
-          videos: videos,
-          audios: audios
-        });
-      });
-    };
-
-    _proto.publishVideo = function publishVideo(uid, microphoneId, cameraId) {
-      var client = this.client;
-      var local = AgoraRTC.createStream({
-        streamID: uid,
-        audio: true,
-        video: true,
-        screen: false,
-        microphoneId: microphoneId,
-        cameraId: cameraId
-      });
-      local.init(function () {
-        console.log('getUserMedia successfully');
-        var video = document.querySelector('.video-me');
-
-        if (video) {
-          video.setAttribute('id', 'agora_local_' + uid);
-          local.play('agora_local_' + uid);
-        } //publish local stream
-
-
-        client.publish(local, function (error) {
-          console.log('Publish local stream error: ' + error);
-        });
-      }, function (error) {
-        console.log('getUserMedia failed', error);
-      });
-      this.local = local;
-    };
-
-    _proto.unpublishVideo = function unpublishVideo() {
-      var client = this.client;
-      var local = this.local;
-      client.unpublish(local, function (error) {
-        console.log('unpublish failed');
-      });
-    };
-
-    _proto.leaveChannel = function leaveChannel() {
-      client.leave(function () {
-        console.log('Leave channel successfully');
-      }, function (error) {
-        console.log('Leave channel failed');
-      });
+      var agora = new AgoraService();
+      agora.connect();
     };
 
     _proto.onDropped = function onDropped(id) {
