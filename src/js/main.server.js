@@ -1,8 +1,8 @@
 const express = require('express');
 const path = require('path');
-const PORT = process.env.PORT || 5000;
 const { RtcTokenBuilder, RtmTokenBuilder, RtcRole, RtmRole } = require('agora-access-token');
-const environment = require('./environment/environment');
+const environment = require('../environment/environment');
+const PORT = process.env.PORT || environment.port;
 
 var app = express();
 
