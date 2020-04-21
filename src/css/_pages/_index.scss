@@ -31,14 +31,19 @@ body {
 	left: 0;
 	width: 100%;
 	display: flex;
-	justify-content: space-between;
+	justify-content: center;
 	align-items: center;
+	padding: 15px;
 }
 
 .group--controls {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+
+	&>button+button {
+		margin-left: 10px;
+	}
 }
 
 .model-viewer {

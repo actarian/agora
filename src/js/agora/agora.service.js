@@ -28,7 +28,7 @@ export default class AgoraService extends Emittable {
 
 	connect() {
 		this.createClient(() => {
-			Http.post$('/api/token/rtc', {}).subscribe(token => {
+			Http.post$('/api/token/rtc', { uid: null }).subscribe(token => {
 				console.log('token', token);
 				this.joinChannel(token.token);
 			});
@@ -64,9 +64,10 @@ export default class AgoraService extends Emittable {
 	joinChannel(token) {
 		const client = this.client;
 		const uid = null;
+		token = null; // !!!
 		client.join(token, environment.channelName, uid, (uid) => {
 			// console.log('User ' + uid + ' join channel successfully');
-			Http.post$('/api/token/rtm', {}).subscribe(token => {
+			Http.post$('/api/token/rtm', { uid: uid }).subscribe(token => {
 				console.log('token', token);
 				this.joinMessageChannel(token.token, uid);
 			});
@@ -85,7 +86,8 @@ export default class AgoraService extends Emittable {
 
 	joinMessageChannel(token, uid) {
 		const messageClient = this.messageClient;
-		messageClient.login({ token: token, uid: uid.toString() }).then(() => {
+		token = null; // !!!
+		messageClient.login({ uid: uid.toString() }).then(() => {
 			this.messageChannel = messageClient.createChannel(environment.channelName);
 			return this.messageChannel.join();
 		}).then(() => {

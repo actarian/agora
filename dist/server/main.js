@@ -15,6 +15,8 @@ var environment = {
 
 var express = require('express');
 
+var bodyParser = require('body-parser');
+
 var path = require('path');
 
 var _require = require('agora-access-token'),
@@ -26,7 +28,12 @@ var PORT = process.env.PORT || environment.port;
 console.log(environment);
 var app = express();
 app.disable('x-powered-by');
-app.use(express.static(path.join(__dirname, '../../docs/'))); // app.use(express.favicon());
+app.use(express.static(path.join(__dirname, '../../docs/')));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+app.use(bodyParser.json());
+app.use(bodyParser.raw()); // app.use(express.favicon());
 
 /*
 app.get('/', function(request, response) {
@@ -45,10 +52,13 @@ app.get('/', function (request, response) {
   response.sendFile(path.join(__dirname + '../../docs/index.html')); // response.render('docs/index');
 });
 app.post('/api/token/rtc', function (request, response) {
+  console.log('/api/token/rtc', request.body);
+  var payload = request.body || {};
+  console.log('/api/token/rtc', payload);
   var duration = 3600;
   var timestamp = Math.floor(Date.now() / 1000);
   var expirationTime = timestamp + duration;
-  var uid = request.uid || timestamp;
+  var uid = payload.uid ? String(payload.uid) : timestamp.toString();
   var role = RtcRole.PUBLISHER;
   var token = RtcTokenBuilder.buildTokenWithUid(environment.appKey, environment.appCertificate, environment.channelName, uid, role, expirationTime);
   console.log('/api/token/rtc', token);
@@ -57,12 +67,15 @@ app.post('/api/token/rtc', function (request, response) {
   }));
 });
 app.post('/api/token/rtm', function (request, response) {
+  console.log('/api/token/rtm', request);
+  var payload = request.body || {};
+  console.log('/api/token/rtm', payload);
   var duration = 3600;
   var timestamp = Math.floor(Date.now() / 1000);
   var expirationTime = timestamp + duration;
-  var uid = request.uid || timestamp;
+  var uid = payload.uid ? String(payload.uid) : timestamp.toString();
   var role = RtmRole.PUBLISHER;
-  var token = RtmTokenBuilder.buildTokenWithUid(environment.appKey, environment.appCertificate, environment.channelName, uid, role, expirationTime);
+  var token = RtmTokenBuilder.buildToken(environment.appKey, environment.appCertificate, uid, role, expirationTime);
   console.log('/api/token/rtm', token);
   response.send(JSON.stringify({
     token: token

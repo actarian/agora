@@ -235,7 +235,9 @@
       var _this2 = this;
 
       this.createClient(function () {
-        HttpService.post$('/api/token/rtc', {}).subscribe(function (token) {
+        HttpService.post$('/api/token/rtc', {
+          uid: null
+        }).subscribe(function (token) {
           console.log('token', token);
 
           _this2.joinChannel(token.token);
@@ -279,9 +281,13 @@
 
       var client = this.client;
       var uid = null;
+      token = null; // !!!
+
       client.join(token, environment.channelName, uid, function (uid) {
         // console.log('User ' + uid + ' join channel successfully');
-        HttpService.post$('/api/token/rtm', {}).subscribe(function (token) {
+        HttpService.post$('/api/token/rtm', {
+          uid: uid
+        }).subscribe(function (token) {
           console.log('token', token);
 
           _this3.joinMessageChannel(token.token, uid);
@@ -303,8 +309,8 @@
       var _this4 = this;
 
       var messageClient = this.messageClient;
+
       messageClient.login({
-        token: token,
         uid: uid.toString()
       }).then(function () {
         _this4.messageChannel = messageClient.createChannel(environment.channelName);

@@ -1,4 +1,6 @@
 const express = require('express');
+const bodyParser = require('body-parser');
+
 const path = require('path');
 const { RtcTokenBuilder, RtmTokenBuilder, RtcRole, RtmRole } = require('agora-access-token');
 
@@ -13,6 +15,9 @@ var app = express();
 app.disable('x-powered-by');
 
 app.use(express.static(path.join(__dirname, '../../docs/')));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.raw());
 
 // app.use(express.favicon());
 
@@ -36,10 +41,13 @@ app.get('/', function(request, response) {
 });
 
 app.post('/api/token/rtc', function(request, response) {
+	console.log('/api/token/rtc', request.body);
+	const payload = request.body || {};
+	console.log('/api/token/rtc', payload);
 	const duration = 3600;
 	const timestamp = Math.floor(Date.now() / 1000);
 	const expirationTime = timestamp + duration;
-	const uid = request.uid || timestamp;
+	const uid = payload.uid ? String(payload.uid) : timestamp.toString();
 	const role = RtcRole.PUBLISHER;
 	const token = RtcTokenBuilder.buildTokenWithUid(environment.appKey, environment.appCertificate, environment.channelName, uid, role, expirationTime);
 	console.log('/api/token/rtc', token);
@@ -49,12 +57,15 @@ app.post('/api/token/rtc', function(request, response) {
 });
 
 app.post('/api/token/rtm', function(request, response) {
+	console.log('/api/token/rtm', request);
+	const payload = request.body || {};
+	console.log('/api/token/rtm', payload);
 	const duration = 3600;
 	const timestamp = Math.floor(Date.now() / 1000);
 	const expirationTime = timestamp + duration;
-	const uid = request.uid || timestamp;
+	const uid = payload.uid ? String(payload.uid) : timestamp.toString();
 	const role = RtmRole.PUBLISHER;
-	const token = RtmTokenBuilder.buildTokenWithUid(environment.appKey, environment.appCertificate, environment.channelName, uid, role, expirationTime);
+	const token = RtmTokenBuilder.buildToken(environment.appKey, environment.appCertificate, uid, role, expirationTime);
 	console.log('/api/token/rtm', token);
 	response.send(JSON.stringify({
 		token: token,
