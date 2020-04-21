@@ -52,31 +52,25 @@ app.get('/', function (request, response) {
   response.sendFile(path.join(__dirname + '../../docs/index.html')); // response.render('docs/index');
 });
 app.post('/api/token/rtc', function (request, response) {
-  console.log('/api/token/rtc', request.body);
   var payload = request.body || {};
-  console.log('/api/token/rtc', payload);
   var duration = 3600;
   var timestamp = Math.floor(Date.now() / 1000);
   var expirationTime = timestamp + duration;
   var uid = payload.uid ? String(payload.uid) : timestamp.toString();
   var role = RtcRole.PUBLISHER;
   var token = RtcTokenBuilder.buildTokenWithUid(environment.appKey, environment.appCertificate, environment.channelName, uid, role, expirationTime);
-  console.log('/api/token/rtc', token);
   response.send(JSON.stringify({
     token: token
   }));
 });
 app.post('/api/token/rtm', function (request, response) {
-  console.log('/api/token/rtm', request);
   var payload = request.body || {};
-  console.log('/api/token/rtm', payload);
   var duration = 3600;
   var timestamp = Math.floor(Date.now() / 1000);
   var expirationTime = timestamp + duration;
   var uid = payload.uid ? String(payload.uid) : timestamp.toString();
   var role = RtmRole.PUBLISHER;
   var token = RtmTokenBuilder.buildToken(environment.appKey, environment.appCertificate, uid, role, expirationTime);
-  console.log('/api/token/rtm', token);
   response.send(JSON.stringify({
     token: token
   }));

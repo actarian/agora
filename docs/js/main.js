@@ -290,7 +290,11 @@
         }).subscribe(function (token) {
           console.log('token', token);
 
-          _this3.joinMessageChannel(token.token, uid);
+          _this3.joinMessageChannel(token.token, uid).then(function (success) {
+            console.log('joinMessageChannel.success', success);
+          }, function (error) {
+            console.log('joinMessageChannel.error', error);
+          });
         }); // !!! require localhost or https
 
         _this3.detectDevices(function (devices) {
@@ -308,18 +312,20 @@
     _proto.joinMessageChannel = function joinMessageChannel(token, uid) {
       var _this4 = this;
 
-      var messageClient = this.messageClient;
+      return new Promise(function (resolve, reject) {
+        var messageClient = _this4.messageClient;
 
-      messageClient.login({
-        uid: uid.toString()
-      }).then(function () {
-        _this4.messageChannel = messageClient.createChannel(environment.channelName);
-        return _this4.messageChannel.join();
-      }).then(function () {
-        _this4.messageChannel.on('ChannelMessage', _this4.onMessage);
+        messageClient.login({
+          uid: uid.toString()
+        }).then(function () {
+          _this4.messageChannel = messageClient.createChannel(environment.channelName);
+          return _this4.messageChannel.join();
+        }).then(function () {
+          _this4.messageChannel.on('ChannelMessage', _this4.onMessage);
 
-        resolve(uid);
-      }).catch(reject);
+          resolve(uid);
+        }).catch(reject);
+      });
     };
 
     _proto.sendMessage = function sendMessage(message) {

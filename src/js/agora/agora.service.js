@@ -69,7 +69,11 @@ export default class AgoraService extends Emittable {
 			// console.log('User ' + uid + ' join channel successfully');
 			Http.post$('/api/token/rtm', { uid: uid }).subscribe(token => {
 				console.log('token', token);
-				this.joinMessageChannel(token.token, uid);
+				this.joinMessageChannel(token.token, uid).then((success) => {
+					console.log('joinMessageChannel.success', success);
+				}, error => {
+					console.log('joinMessageChannel.error', error);
+				});
 			});
 			// !!! require localhost or https
 			this.detectDevices((devices) => {
@@ -85,15 +89,17 @@ export default class AgoraService extends Emittable {
 	}
 
 	joinMessageChannel(token, uid) {
-		const messageClient = this.messageClient;
-		token = null; // !!!
-		messageClient.login({ uid: uid.toString() }).then(() => {
-			this.messageChannel = messageClient.createChannel(environment.channelName);
-			return this.messageChannel.join();
-		}).then(() => {
-			this.messageChannel.on('ChannelMessage', this.onMessage);
-			resolve(uid);
-		}).catch(reject);
+		return new Promise((resolve, reject) => {
+			const messageClient = this.messageClient;
+			token = null; // !!!
+			messageClient.login({ uid: uid.toString() }).then(() => {
+				this.messageChannel = messageClient.createChannel(environment.channelName);
+				return this.messageChannel.join();
+			}).then(() => {
+				this.messageChannel.on('ChannelMessage', this.onMessage);
+				resolve(uid);
+			}).catch(reject);
+		});
 	}
 
 	sendMessage(message) {
