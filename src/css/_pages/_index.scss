@@ -1,13 +1,88 @@
-.video-me {
-	width: 120px;
-	height: 90px;
-	border-radius: 8px;
+html,
+body {
+	width: 100%;
+	height: 100%;
+}
+
+body {
+	position: fixed;
 	overflow: hidden;
 }
 
-.video-other {
-	width: 360px;
-	height: 270px;
-	border-radius: 8px;
+.ui {
+	width: 100%;
+	height: 100%;
+}
+
+.ui__head {
+	position: absolute;
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	top: 0;
+	left: 0;
+	width: 100%;
+	padding: 15px;
+}
+
+.ui__foot {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.group--controls {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.model-viewer {
+	width: 100%;
+	height: 100%;
+}
+
+.model-viewer__view {
+	background: #bdbdbd;
+	/* Old browsers */
+	background: linear-gradient(to bottom, #bdbdbd 1%, #ffffff 50%, #bdbdbd 100%);
+	/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	// filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bdbdbd', endColorstr='#bdbdbd',GradientType=0 ); /* IE6-9 */
+
+	&,
+	& canvas {
+		width: 100vw;
+		height: 100vh;
+		outline: none;
+	}
+}
+
+.video {
+	border-radius: 12px;
 	overflow: hidden;
+	background: white;
+}
+
+@mixin ratio($width, $ratio) {
+	width: $width;
+	height: $width / $ratio;
+}
+
+.video--me {
+	@include ratio(120px, 4 / 3);
+}
+
+.video--other {
+	@include ratio(320px, 4 / 3);
+}
+
+.btn--cam,
+.btn--mic,
+.btn--call {
+	@extend %btn-circle;
+	background: white;
 }

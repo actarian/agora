@@ -28,6 +28,10 @@ export default class AppComponent extends Component {
 			this.parseQueryString();
 		}, 500);
 		*/
+		// this.useAgora();
+	}
+
+	useAgora() {
 		const agora = new AgoraService();
 		agora.connect();
 	}

@@ -39,7 +39,7 @@
       "bundle": [
         {
           "input": [
-            "src/sdk/AgoraRTCSDK-3.0.2.js",
+            "node_modules/agora-rtc-sdk/AgoraRTCSDK.min.js",
             "node_modules/rxjs/bundles/rxjs.umd.js",
             "node_modules/rxcomp/dist/iife/rxcomp.js",
             "node_modules/rxcomp-form/dist/iife/rxcomp-form.js",
@@ -48,6 +48,18 @@
           ],
           "output": "docs/js/vendors.js",
           "minify": true
+        }
+      ]
+    },
+    "dist": {
+      "compile": [
+        {
+          "input": "src/js/main.server.js",
+          "output": {
+            "file": "dist/server/main.js",
+            "format": "cjs"
+          },
+          "minify": false
         }
       ]
     }

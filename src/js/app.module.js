@@ -55,6 +55,7 @@ import WorkWithUsComponent from './work-with-us/work-with-us.component';
 import YoutubeComponent from './youtube/youtube.component';
 import ZoomableDirective from './zoomable/zoomable.directive';
 */
+import { ModelViewerComponent } from './model-viewer/model-viewer.component';
 
 export default class AppModule extends Module {}
 
@@ -64,6 +65,7 @@ AppModule.meta = {
 		FormModule,
 	],
 	declarations: [
+		ModelViewerComponent,
 		/*
 		AgentsComponent,
 		AppearDirective,

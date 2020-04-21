@@ -1,5 +1,4 @@
-a,
-button {
+%btn-reset {
 	display: inline-block;
 	padding: 0;
 	border: none;
@@ -24,6 +23,7 @@ button {
 }
 
 %btn {
+	@extend %btn-reset;
 	// transition: ease-in-out 350ms;
 	// transition-property: background-color, color, border, opacity;
 
@@ -31,6 +31,31 @@ button {
 		opacity: 0.5;
 		pointer-events: none;
 	}
+}
+
+%btn-circle {
+	@extend %btn;
+	width: 50px;
+	height: 50px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 25px;
+}
+
+%btn-rect {
+	@extend %btn;
+	height: 50px;
+	line-height: 50px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 25px;
+}
+
+a,
+button {
+	@extend %btn-reset;
 }
 
 .btn {
