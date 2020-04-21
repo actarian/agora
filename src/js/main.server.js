@@ -1,16 +1,26 @@
 const express = require('express');
 const path = require('path');
 const { RtcTokenBuilder, RtmTokenBuilder, RtcRole, RtmRole } = require('agora-access-token');
-const environment = require('../environment/environment');
+
+import { environment } from '../environment/environment';
+
 const PORT = process.env.PORT || environment.port;
+
+console.log(environment);
 
 var app = express();
 
 app.disable('x-powered-by');
 
-app.use(express.favicon());
+app.use(express.static(path.join(__dirname, '../../docs/')));
 
-app.use(express.static(path.join(__dirname, 'docs')));
+// app.use(express.favicon());
+
+/*
+app.get('/', function(request, response) {
+	response.send('Hello World!');
+});
+*/
 
 /*
 app.set('views', path.join(__dirname, 'views'));
@@ -18,11 +28,12 @@ app.set('view engine', 'ejs');
 app.get('/', (request, response) => response.render('pages/index'));
 */
 
-/*
+// app.set('view engine', 'handlebars');
+
 app.get('/', function(request, response) {
-	response.send('Hello World!');
+	response.sendFile(path.join(__dirname + '../../docs/index.html'));
+	// response.render('docs/index');
 });
-*/
 
 app.post('/api/token/rtc', function(request, response) {
 	const duration = 3600;

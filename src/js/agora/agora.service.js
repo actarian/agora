@@ -2,8 +2,9 @@
 // const AgoraRTC = require('agora-rtc-sdk');
 
 import AgoraRTM from 'agora-rtm-sdk';
-import { EventEmitter } from 'events';
 import { environment } from '../../environment/environment';
+import Emittable from '../emittable/emittable';
+import Http from '../http/http.service';
 
 export const MessageType = {
 	Ping: 'ping',
@@ -12,9 +13,10 @@ export const MessageType = {
 	RequestControlRejected: 'requestControlRejected',
 };
 
-export default class AgoraService extends EventEmitter {
+export default class AgoraService extends Emittable {
 
 	constructor() {
+		super();
 		this.onStreamPublished = this.onStreamPublished.bind(this);
 		this.onStreamAdded = this.onStreamAdded.bind(this);
 		this.onStreamSubscribed = this.onStreamSubscribed.bind(this);
@@ -26,7 +28,10 @@ export default class AgoraService extends EventEmitter {
 
 	connect() {
 		this.createClient(() => {
-			this.joinChannel();
+			Http.post$('/api/token/rtc', {}).subscribe(token => {
+				console.log('token', token);
+				this.joinChannel(token.token);
+			});
 		});
 	}
 
@@ -50,20 +55,21 @@ export default class AgoraService extends EventEmitter {
 		client.on('onTokenPrivilegeWillExpire', this.onTokenPrivilegeWillExpire);
 		client.on('onTokenPrivilegeDidExpire', this.onTokenPrivilegeDidExpire);
 
-		console.log('agora rtm sdk version: ' + AgoraRTM.VERSION + ' compatible: ' + AgoraRTM.checkSystemRequirements());
+		console.log('agora rtm sdk version: ' + AgoraRTM.VERSION + ' compatible');
 		const messageClient = this.messageClient = AgoraRTM.createInstance(environment.appKey, { logFilter: AgoraRTM.LOG_FILTER_DEBUG });
 		messageClient.on('ConnectionStateChanged', console.error);
 		messageClient.on('MessageFromPeer', console.warn);
 	}
 
-	joinChannel() {
+	joinChannel(token) {
 		const client = this.client;
-		const tokenOrKey = null;
-		const channelName = 'Channel';
 		const uid = null;
-		client.join(tokenOrKey, environment.channelName, uid, (uid) => {
+		client.join(token, environment.channelName, uid, (uid) => {
 			// console.log('User ' + uid + ' join channel successfully');
-			this.joinMessageChannel(uid);
+			Http.post$('/api/token/rtm', {}).subscribe(token => {
+				console.log('token', token);
+				this.joinMessageChannel(token.token, uid);
+			});
 			// !!! require localhost or https
 			this.detectDevices((devices) => {
 				// console.log(devices);
@@ -77,9 +83,9 @@ export default class AgoraService extends EventEmitter {
 		// https://console.agora.io/invite?sign=YXBwSWQlM0RhYjQyODlhNDZjZDM0ZGE2YTYxZmQ4ZDY2Nzc0YjY1ZiUyNm5hbWUlM0RaYW1wZXR0aSUyNnRpbWVzdGFtcCUzRDE1ODY5NjM0NDU=// join link expire in 30 minutes
 	}
 
-	joinMessageChannel(uid) {
+	joinMessageChannel(token, uid) {
 		const messageClient = this.messageClient;
-		messageClient.login({ uid: uid.toString() }).then(() => {
+		messageClient.login({ token: token, uid: uid.toString() }).then(() => {
 			this.messageChannel = messageClient.createChannel(environment.channelName);
 			return this.messageChannel.join();
 		}).then(() => {
@@ -96,7 +102,7 @@ export default class AgoraService extends EventEmitter {
 		console.log('wrc: send', message);
 		if (message.rpcid) {
 			return new Promise(resolve => {
-				this.once(`wrc-message-${message.rpcid}`, (message) => {
+				this.once(`message-${message.rpcid}`, (message) => {
 					resolve(message);
 				});
 			});
@@ -280,11 +286,11 @@ export default class AgoraService extends EventEmitter {
 		if (uid !== this.uid) {
 			const message = JSON.parse(data.text);
 			console.log('wrc: receive', message);
+			if (message.rpcid) {
+				this.emit(`message-${message.rpcid}`, message);
+			}
 			/*
 			// this.emit('wrc-message', message);
-			if (message.rpcid) {
-			  // this.emit(`wrc-message-${message.rpcid}`, message);
-			}
 			if (message.type === WRCMessageType.WRC_CLOSE) {
 			  console.log('receive wrc close')
 			  this.cleanRemote()

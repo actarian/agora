@@ -5,10 +5,10 @@
  */
 
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('rxcomp'), require('rxcomp-form'), require('rxjs/operators'), require('events'), require('rxjs')) :
-  typeof define === 'function' && define.amd ? define(['rxcomp', 'rxcomp-form', 'rxjs/operators', 'events', 'rxjs'], factory) :
-  (global = global || self, factory(global.rxcomp, global.rxcomp.form, global.rxjs.operators, global.events, global.rxjs));
-}(this, (function (rxcomp, rxcompForm, operators, events, rxjs) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('rxcomp'), require('rxcomp-form'), require('rxjs/operators'), require('rxjs')) :
+  typeof define === 'function' && define.amd ? define(['rxcomp', 'rxcomp-form', 'rxjs/operators', 'rxjs'], factory) :
+  (global = global || self, factory(global.rxcomp, global.rxcomp.form, global.rxjs.operators, global.rxjs));
+}(this, (function (rxcomp, rxcompForm, operators, rxjs) { 'use strict';
 
   function _inheritsLoose(subClass, superClass) {
     subClass.prototype = Object.create(superClass.prototype);
@@ -48,8 +48,162 @@
 
   var environment = {
     appKey: 'ab4289a46cd34da6a61fd8d66774b65f',
-    channelName: 'Channel'
+    appCertificate: '',
+    channelName: 'Channel',
+    port: 5000
   };
+
+  var Emittable = /*#__PURE__*/function () {
+    function Emittable() {
+      this.events = {};
+    }
+
+    var _proto = Emittable.prototype;
+
+    _proto.on = function on(type, callback) {
+      var _this = this;
+
+      var event = this.events[type] = this.events[type] || [];
+      event.push(callback);
+      return function () {
+        _this.events[type] = event.filter(function (x) {
+          return x !== callback;
+        });
+      };
+    };
+
+    _proto.off = function off(type, callback) {
+      var event = this.events[type];
+
+      if (event) {
+        this.events[type] = event.filter(function (x) {
+          return x !== callback;
+        });
+      }
+    };
+
+    _proto.once = function once(type, callback) {
+      var _this2 = this;
+
+      var once = function once(data) {
+        callback(data);
+
+        _this2.off(type, once);
+      };
+
+      this.on(type, once);
+    };
+
+    _proto.emit = function emit(type, data) {
+      var event = this.events[type];
+
+      if (event) {
+        event.forEach(function (callback) {
+          // callback.call(this, data);
+          callback(data);
+        });
+      }
+
+      var broadcast = this.events.broadcast;
+
+      if (broadcast) {
+        broadcast.forEach(function (callback) {
+          callback(type, data);
+        });
+      }
+    };
+
+    return Emittable;
+  }();
+
+  var STATIC = window.location.port === '41999' || window.location.host === 'actarian.github.io';
+  var DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
+
+  var HttpService = /*#__PURE__*/function () {
+    function HttpService() {}
+
+    HttpService.http$ = function http$(method, url, data, format) {
+      var _this = this;
+
+      if (format === void 0) {
+        format = 'json';
+      }
+
+      var methods = ['POST', 'PUT', 'PATCH'];
+      var response_ = null;
+      return rxjs.from(fetch(this.getUrl(url, format), {
+        method: method,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: methods.indexOf(method) !== -1 ? JSON.stringify(data) : undefined
+      }).then(function (response) {
+        response_ = response; // console.log(response);
+
+        if (response.ok) {
+          return response[format]();
+        } else {
+          return response.json().then(function (json) {
+            return Promise.reject(json);
+          });
+        }
+      })).pipe(operators.catchError(function (error) {
+        return rxjs.throwError(_this.getError(error, response_));
+      }));
+    };
+
+    HttpService.get$ = function get$(url, data, format) {
+      var query = this.query(data);
+      return this.http$('GET', "" + url + query, undefined, format);
+    };
+
+    HttpService.delete$ = function delete$(url) {
+      return this.http$('DELETE', url);
+    };
+
+    HttpService.post$ = function post$(url, data) {
+      return this.http$('POST', url, data);
+    };
+
+    HttpService.put$ = function put$(url, data) {
+      return this.http$('PUT', url, data);
+    };
+
+    HttpService.patch$ = function patch$(url, data) {
+      return this.http$('PATCH', url, data);
+    };
+
+    HttpService.query = function query(data) {
+      return ''; // todo
+    };
+
+    HttpService.getUrl = function getUrl(url, format) {
+      if (format === void 0) {
+        format = 'json';
+      }
+
+      // console.log(url);
+      return STATIC && format === 'json' && url.indexOf('/') === 0 ? "." + url + ".json" : url;
+    };
+
+    HttpService.getError = function getError(object, response) {
+      var error = typeof object === 'object' ? object : {};
+
+      if (!error.statusCode) {
+        error.statusCode = response ? response.status : 0;
+      }
+
+      if (!error.statusMessage) {
+        error.statusMessage = response ? response.statusText : object;
+      }
+
+      console.log('HttpService.getError', error, object);
+      return error;
+    };
+
+    return HttpService;
+  }();
 
   var MessageType = {
     Ping: 'ping',
@@ -58,12 +212,13 @@
     RequestControlRejected: 'requestControlRejected'
   };
 
-  var AgoraService = /*#__PURE__*/function (_EventEmitter) {
-    _inheritsLoose(AgoraService, _EventEmitter);
+  var AgoraService = /*#__PURE__*/function (_Emittable) {
+    _inheritsLoose(AgoraService, _Emittable);
 
     function AgoraService() {
       var _this;
 
+      _this = _Emittable.call(this) || this;
       _this.onStreamPublished = _this.onStreamPublished.bind(_assertThisInitialized(_this));
       _this.onStreamAdded = _this.onStreamAdded.bind(_assertThisInitialized(_this));
       _this.onStreamSubscribed = _this.onStreamSubscribed.bind(_assertThisInitialized(_this));
@@ -71,7 +226,7 @@
       _this.onPeerLeaved = _this.onPeerLeaved.bind(_assertThisInitialized(_this));
       _this.onTokenPrivilegeWillExpire = _this.onTokenPrivilegeWillExpire.bind(_assertThisInitialized(_this));
       _this.onTokenPrivilegeDidExpire = _this.onTokenPrivilegeDidExpire.bind(_assertThisInitialized(_this));
-      return _assertThisInitialized(_this);
+      return _this;
     }
 
     var _proto = AgoraService.prototype;
@@ -80,7 +235,11 @@
       var _this2 = this;
 
       this.createClient(function () {
-        _this2.joinChannel();
+        HttpService.post$('/api/token/rtc', {}).subscribe(function (token) {
+          console.log('token', token);
+
+          _this2.joinChannel(token.token);
+        });
       });
     };
 
@@ -107,7 +266,7 @@
       client.on('stream-removed', this.onStreamRemoved);
       client.on('onTokenPrivilegeWillExpire', this.onTokenPrivilegeWillExpire);
       client.on('onTokenPrivilegeDidExpire', this.onTokenPrivilegeDidExpire);
-      console.log('agora rtm sdk version: ' + AgoraRTM.VERSION + ' compatible: ' + AgoraRTM.checkSystemRequirements());
+      console.log('agora rtm sdk version: ' + AgoraRTM.VERSION + ' compatible');
       var messageClient = this.messageClient = AgoraRTM.createInstance(environment.appKey, {
         logFilter: AgoraRTM.LOG_FILTER_DEBUG
       });
@@ -115,16 +274,18 @@
       messageClient.on('MessageFromPeer', console.warn);
     };
 
-    _proto.joinChannel = function joinChannel() {
+    _proto.joinChannel = function joinChannel(token) {
       var _this3 = this;
 
       var client = this.client;
-      var tokenOrKey = null;
       var uid = null;
-      client.join(tokenOrKey, environment.channelName, uid, function (uid) {
+      client.join(token, environment.channelName, uid, function (uid) {
         // console.log('User ' + uid + ' join channel successfully');
-        _this3.joinMessageChannel(uid); // !!! require localhost or https
+        HttpService.post$('/api/token/rtm', {}).subscribe(function (token) {
+          console.log('token', token);
 
+          _this3.joinMessageChannel(token.token, uid);
+        }); // !!! require localhost or https
 
         _this3.detectDevices(function (devices) {
           // console.log(devices);
@@ -138,11 +299,12 @@
       }); // https://console.agora.io/invite?sign=YXBwSWQlM0RhYjQyODlhNDZjZDM0ZGE2YTYxZmQ4ZDY2Nzc0YjY1ZiUyNm5hbWUlM0RaYW1wZXR0aSUyNnRpbWVzdGFtcCUzRDE1ODY5NjM0NDU=// join link expire in 30 minutes
     };
 
-    _proto.joinMessageChannel = function joinMessageChannel(uid) {
+    _proto.joinMessageChannel = function joinMessageChannel(token, uid) {
       var _this4 = this;
 
       var messageClient = this.messageClient;
       messageClient.login({
+        token: token,
         uid: uid.toString()
       }).then(function () {
         _this4.messageChannel = messageClient.createChannel(environment.channelName);
@@ -167,7 +329,7 @@
 
       if (message.rpcid) {
         return new Promise(function (resolve) {
-          _this5.once("wrc-message-" + message.rpcid, function (message) {
+          _this5.once("message-" + message.rpcid, function (message) {
             resolve(message);
           });
         });
@@ -364,17 +526,19 @@
       if (uid !== this.uid) {
         var message = JSON.parse(data.text);
         console.log('wrc: receive', message);
+
+        if (message.rpcid) {
+          this.emit("message-" + message.rpcid, message);
+        }
         /*
         // this.emit('wrc-message', message);
-        if (message.rpcid) {
-          // this.emit(`wrc-message-${message.rpcid}`, message);
-        }
         if (message.type === WRCMessageType.WRC_CLOSE) {
           console.log('receive wrc close')
           this.cleanRemote()
           this.emit('remote-close')
         }
         */
+
       }
     };
 
@@ -454,10 +618,7 @@
     };
 
     return AgoraService;
-  }(events.EventEmitter);
-
-  var STATIC = window.location.port === '41999' || window.location.host === 'actarian.github.io';
-  var DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
+  }(Emittable);
 
   var LocationService = /*#__PURE__*/function () {
     function LocationService() {}
@@ -602,92 +763,6 @@
   }();
   ModalService.modal$ = new rxjs.Subject();
   ModalService.events$ = new rxjs.Subject();
-
-  var HttpService = /*#__PURE__*/function () {
-    function HttpService() {}
-
-    HttpService.http$ = function http$(method, url, data, format) {
-      var _this = this;
-
-      if (format === void 0) {
-        format = 'json';
-      }
-
-      var methods = ['POST', 'PUT', 'PATCH'];
-      var response_ = null;
-      return rxjs.from(fetch(this.getUrl(url, format), {
-        method: method,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: methods.indexOf(method) !== -1 ? JSON.stringify(data) : undefined
-      }).then(function (response) {
-        response_ = response; // console.log(response);
-
-        if (response.ok) {
-          return response[format]();
-        } else {
-          return response.json().then(function (json) {
-            return Promise.reject(json);
-          });
-        }
-      })).pipe(operators.catchError(function (error) {
-        return rxjs.throwError(_this.getError(error, response_));
-      }));
-    };
-
-    HttpService.get$ = function get$(url, data, format) {
-      var query = this.query(data);
-      return this.http$('GET', "" + url + query, undefined, format);
-    };
-
-    HttpService.delete$ = function delete$(url) {
-      return this.http$('DELETE', url);
-    };
-
-    HttpService.post$ = function post$(url, data) {
-      return this.http$('POST', url, data);
-    };
-
-    HttpService.put$ = function put$(url, data) {
-      return this.http$('PUT', url, data);
-    };
-
-    HttpService.patch$ = function patch$(url, data) {
-      return this.http$('PATCH', url, data);
-    };
-
-    HttpService.query = function query(data) {
-      return ''; // todo
-    };
-
-    HttpService.getUrl = function getUrl(url, format) {
-      if (format === void 0) {
-        format = 'json';
-      }
-
-      // console.log(url);
-      return STATIC && format === 'json' && url.indexOf('/') === 0 ? "." + url + ".json" : url;
-    };
-
-    HttpService.getError = function getError(object, response) {
-      var error = typeof object === 'object' ? object : {};
-
-      if (!error.statusCode) {
-        error.statusCode = response ? response.status : 0;
-      }
-
-      if (!error.statusMessage) {
-        error.statusMessage = response ? response.statusText : object;
-      }
-
-      console.log('HttpService.getError', error, object);
-      return error;
-    };
-
-    return HttpService;
-  }();
 
   var LocalStorageService = /*#__PURE__*/function () {
     function LocalStorageService() {}
@@ -893,7 +968,8 @@
       	this.parseQueryString();
       }, 500);
       */
-      // this.useAgora();
+
+      this.useAgora();
     };
 
     _proto.useAgora = function useAgora() {

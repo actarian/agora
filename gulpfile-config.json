@@ -13,6 +13,14 @@
           "minify": true
         },
         {
+          "input": "src/js/main.server.js",
+          "output": {
+            "file": "dist/server/main.js",
+            "format": "cjs"
+          },
+          "minify": false
+        },
+        {
           "input": "src/js/main.js",
           "output": {
             "file": "docs/js/main.js",

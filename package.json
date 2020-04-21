@@ -11,9 +11,9 @@
   "engines": {
     "node": "10.x"
   },
-  "main": "dist/server/index.js",
+  "main": "dist/server/main.js",
   "scripts": {
-    "start": "node dist/server/index.js"
+    "start": "node dist/server/main.js"
   },
   "dependencies": {
     "agora-access-token": "~2.0.2",

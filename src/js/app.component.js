@@ -28,7 +28,7 @@ export default class AppComponent extends Component {
 			this.parseQueryString();
 		}, 500);
 		*/
-		// this.useAgora();
+		this.useAgora();
 	}
 
 	useAgora() {

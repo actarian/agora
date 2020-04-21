@@ -6,12 +6,6 @@
 
 'use strict';
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var express = _interopDefault(require('express'));
-var path = _interopDefault(require('path'));
-var agoraAccessToken = _interopDefault(require('agora-access-token'));
-
 var environment = {
   appKey: 'ab4289a46cd34da6a61fd8d66774b65f',
   appCertificate: '',
@@ -19,25 +13,20 @@ var environment = {
   port: 5000
 };
 
-var environment$1 = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	environment: environment
-});
+var express = require('express');
 
-var RtcTokenBuilder = agoraAccessToken.RtcTokenBuilder,
-    RtmTokenBuilder = agoraAccessToken.RtmTokenBuilder,
-    RtcRole = agoraAccessToken.RtcRole,
-    RtmRole = agoraAccessToken.RtmRole;
-var PORT = process.env.PORT || environment$1.port;
+var path = require('path');
+
+var _require = require('agora-access-token'),
+    RtcTokenBuilder = _require.RtcTokenBuilder,
+    RtmTokenBuilder = _require.RtmTokenBuilder,
+    RtcRole = _require.RtcRole,
+    RtmRole = _require.RtmRole;
+var PORT = process.env.PORT || environment.port;
+console.log(environment);
 var app = express();
 app.disable('x-powered-by');
-app.use(express.favicon());
-app.use(express.static(path.join(__dirname, 'docs')));
-/*
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-app.get('/', (request, response) => response.render('pages/index'));
-*/
+app.use(express.static(path.join(__dirname, '../../docs/'))); // app.use(express.favicon());
 
 /*
 app.get('/', function(request, response) {
@@ -45,13 +34,23 @@ app.get('/', function(request, response) {
 });
 */
 
+/*
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+app.get('/', (request, response) => response.render('pages/index'));
+*/
+// app.set('view engine', 'handlebars');
+
+app.get('/', function (request, response) {
+  response.sendFile(path.join(__dirname + '../../docs/index.html')); // response.render('docs/index');
+});
 app.post('/api/token/rtc', function (request, response) {
   var duration = 3600;
   var timestamp = Math.floor(Date.now() / 1000);
   var expirationTime = timestamp + duration;
   var uid = request.uid || timestamp;
   var role = RtcRole.PUBLISHER;
-  var token = RtcTokenBuilder.buildTokenWithUid(environment$1.appKey, environment$1.appCertificate, environment$1.channelName, uid, role, expirationTime);
+  var token = RtcTokenBuilder.buildTokenWithUid(environment.appKey, environment.appCertificate, environment.channelName, uid, role, expirationTime);
   console.log('/api/token/rtc', token);
   response.send(JSON.stringify({
     token: token
@@ -63,7 +62,7 @@ app.post('/api/token/rtm', function (request, response) {
   var expirationTime = timestamp + duration;
   var uid = request.uid || timestamp;
   var role = RtmRole.PUBLISHER;
-  var token = RtmTokenBuilder.buildTokenWithUid(environment$1.appKey, environment$1.appCertificate, environment$1.channelName, uid, role, expirationTime);
+  var token = RtmTokenBuilder.buildTokenWithUid(environment.appKey, environment.appCertificate, environment.channelName, uid, role, expirationTime);
   console.log('/api/token/rtm', token);
   response.send(JSON.stringify({
     token: token
