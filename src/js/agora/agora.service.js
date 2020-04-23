@@ -7,6 +7,11 @@ import { environment } from '../../environment/environment';
 import Emittable from '../emittable/emittable';
 import HttpService from '../http/http.service';
 
+export const RoleType = {
+	Attendee: 'attendee',
+	Publisher: 'publisher',
+};
+
 export const MessageType = {
 	Ping: 'ping',
 	RequestControl: 'requestControl',
@@ -18,7 +23,7 @@ export const MessageType = {
 
 export default class AgoraService extends Emittable {
 
-	constructor() {
+	constructor(state) {
 		super();
 		this.onStreamPublished = this.onStreamPublished.bind(this);
 		this.onStreamAdded = this.onStreamAdded.bind(this);
@@ -28,12 +33,16 @@ export default class AgoraService extends Emittable {
 		this.onTokenPrivilegeWillExpire = this.onTokenPrivilegeWillExpire.bind(this);
 		this.onTokenPrivilegeDidExpire = this.onTokenPrivilegeDidExpire.bind(this);
 		this.state = {
+			role: RoleType.ATTENDEE,
 			connected: false,
 			locked: false,
 			control: false,
 			cameraMuted: true,
 			audioMuted: true,
 		};
+		if (state) {
+			this.state = Object.assign(this.state, state);
+		}
 		this.state$ = new BehaviorSubject(this.state);
 	}
 

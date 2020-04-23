@@ -136,6 +136,11 @@
     return HttpService;
   }();
 
+  var RoleType = {
+    Attendee: 'attendee',
+    Publisher: 'publisher'
+  };
+
   var BASE_HREF = document.querySelector('base').getAttribute('href');
 
   var LocationService = /*#__PURE__*/function () {
@@ -315,6 +320,7 @@
       this.item = null;
       this.form = null;
       this.state = {
+        role: LocationService.get('role') || RoleType.Attendee,
         connecting: false,
         connected: false,
         locked: false,
@@ -328,35 +334,12 @@
       }
 
       this.loadData();
-      this.addListeners();
-    };
-
-    _proto.onDestroy = function onDestroy() {
-      this.removeListeners();
     };
 
     _proto.onPrevent = function onPrevent(event) {
       event.preventDefault();
-    };
-
-    _proto.addListeners = function addListeners() {
-      this.onPrevent = this.onPrevent.bind(this);
-
-      var _getContext2 = rxcomp.getContext(this),
-          node = _getContext2.node;
-
-      var lock = node.querySelector('.ui__lock');
-      lock.addEventListener('mousedown', this.onPrevent);
-      lock.addEventListener('touchstart', this.onPrevent);
-    };
-
-    _proto.removeListeners = function removeListeners() {
-      var _getContext3 = rxcomp.getContext(this),
-          node = _getContext3.node;
-
-      var lock = node.querySelector('.ui__lock');
-      lock.removeEventListener('mousedown', this.onPrevent);
-      lock.removeEventListener('touchstart', this.onPrevent);
+      event.stopImmediatePropagation();
+      console.log('onPrevent');
     };
 
     _proto.loadData = function loadData() {

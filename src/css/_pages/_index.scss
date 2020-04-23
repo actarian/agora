@@ -141,6 +141,15 @@ body {
 
 }
 
+.btn--connect {
+	@extend %btn-rect;
+
+	svg {
+		fill: white;
+		margin-right: 10px;
+	}
+}
+
 .video {
 	border-radius: 12px;
 	overflow: hidden;
@@ -154,7 +163,7 @@ body {
 
 .video--me {
 	@include ratio(120px, 4 / 3);
-	margin-left: 20px;
+	margin-left: 200px;
 }
 
 .video--other {
@@ -164,14 +173,51 @@ body {
 .group--me {
 	display: flex;
 	align-items: center;
+
+	&.publisher {
+		.video--me {
+			margin-left: 20px;
+		}
+	}
 }
 
-.btn--connect {
-	@extend %btn-rect;
+.btn--control {
+	@extend %btn-circle;
+	margin-left: 140px;
 
-	svg {
-		fill: white;
-		margin-right: 10px;
+	&,
+	&:active,
+	&:focus,
+	&:hover,
+	&:visited {
+		border: 2px solid rgba($foreground, 0.2);
+		background: transparent;
+		color: $foreground;
+
+		svg {
+			color: $foreground;
+		}
+	}
+
+	&:hover {
+		border: 2px solid rgba($foreground, 1.0);
+	}
+
+	&.active {
+
+		&,
+		&:active,
+		&:focus,
+		&:hover,
+		&:visited {
+			border: 2px solid rgba($foreground-primary, 1.0);
+			background: $foreground-primary;
+			color: $foreground-negative;
+
+			svg {
+				fill: $foreground-negative;
+			}
+		}
 	}
 }
 
@@ -233,46 +279,6 @@ body {
 		}
 	}
 
-}
-
-.btn--control {
-	@extend %btn-circle;
-	margin-left: 140px;
-
-	&,
-	&:active,
-	&:focus,
-	&:hover,
-	&:visited {
-		border: 2px solid rgba($foreground, 0.2);
-		background: transparent;
-		color: $foreground;
-
-		svg {
-			color: $foreground;
-		}
-	}
-
-	&:hover {
-		border: 2px solid rgba($foreground, 1.0);
-	}
-
-	&.active {
-
-		&,
-		&:active,
-		&:focus,
-		&:hover,
-		&:visited {
-			border: 2px solid rgba($foreground-primary, 1.0);
-			background: $foreground-primary;
-			color: $foreground-negative;
-
-			svg {
-				fill: $foreground-negative;
-			}
-		}
-	}
 }
 
 .btn--ar {

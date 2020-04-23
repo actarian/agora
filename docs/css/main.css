@@ -202,9 +202,9 @@ strong {
 .text--center {
   text-align: center; }
 
-.btn--cam,
+.btn--control, .btn--cam,
 .btn--mic,
-.btn--call, .btn--control, .btn--connect, .btn--ar, .btn, a,
+.btn--call, .btn--connect, .btn--ar, .btn, a,
 button, .btn--heart {
   display: inline-block;
   padding: 0;
@@ -217,35 +217,35 @@ button, .btn--heart {
   font: inherit;
   cursor: pointer;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
-  .btn--cam,
+  .btn--control, .btn--cam,
   .btn--mic,
-  .btn--call, .btn--control, .btn--connect, .btn--ar, .btn, a,
-  button, .btn--heart, .btn--cam:active,
+  .btn--call, .btn--connect, .btn--ar, .btn, a,
+  button, .btn--heart, .btn--control:active, .btn--cam:active,
   .btn--mic:active,
-  .btn--call:active, .btn--control:active, .btn--connect:active, .btn--ar:active, .btn:active, a:active,
-  button:active, .btn--heart:active, .btn--cam:focus,
+  .btn--call:active, .btn--connect:active, .btn--ar:active, .btn:active, a:active,
+  button:active, .btn--heart:active, .btn--control:focus, .btn--cam:focus,
   .btn--mic:focus,
-  .btn--call:focus, .btn--control:focus, .btn--connect:focus, .btn--ar:focus, .btn:focus, a:focus,
-  button:focus, .btn--heart:focus, .btn--cam:hover,
+  .btn--call:focus, .btn--connect:focus, .btn--ar:focus, .btn:focus, a:focus,
+  button:focus, .btn--heart:focus, .btn--control:hover, .btn--cam:hover,
   .btn--mic:hover,
-  .btn--call:hover, .btn--control:hover, .btn--connect:hover, .btn--ar:hover, .btn:hover, a:hover,
-  button:hover, .btn--heart:hover, .btn--cam:visited,
+  .btn--call:hover, .btn--connect:hover, .btn--ar:hover, .btn:hover, a:hover,
+  button:hover, .btn--heart:hover, .btn--control:visited, .btn--cam:visited,
   .btn--mic:visited,
-  .btn--call:visited, .btn--control:visited, .btn--connect:visited, .btn--ar:visited, .btn:visited, a:visited,
+  .btn--call:visited, .btn--connect:visited, .btn--ar:visited, .btn:visited, a:visited,
   button:visited, .btn--heart:visited {
     color: inherit;
     text-decoration: none;
     outline: none; }
 
-.btn--cam[disabled],
+.btn--control[disabled], .btn--cam[disabled],
 .btn--mic[disabled],
-.btn--call[disabled], .btn--control[disabled], .btn--connect[disabled], .btn--ar[disabled], .btn[disabled] {
+.btn--call[disabled], .btn--connect[disabled], .btn--ar[disabled], .btn[disabled] {
   opacity: 0.5;
   pointer-events: none; }
 
-.btn--cam,
+.btn--control, .btn--cam,
 .btn--mic,
-.btn--call, .btn--control {
+.btn--call {
   width: 50px;
   height: 50px;
   display: flex;
@@ -253,23 +253,23 @@ button, .btn--heart {
   align-items: center;
   border-radius: 25px;
   transition: all ease-in-out 350ms; }
-  .btn--cam svg, .btn--mic svg, .btn--call svg, .btn--control svg {
+  .btn--control svg, .btn--cam svg, .btn--mic svg, .btn--call svg {
     width: 24px;
     height: 24px; }
-  .btn--cam,
+  .btn--control, .btn--cam,
   .btn--mic,
-  .btn--call, .btn--control, .btn--cam:active,
+  .btn--call, .btn--control:active, .btn--cam:active,
   .btn--mic:active,
-  .btn--call:active, .btn--control:active, .btn--cam:focus,
+  .btn--call:active, .btn--control:focus, .btn--cam:focus,
   .btn--mic:focus,
-  .btn--call:focus, .btn--control:focus, .btn--cam:hover,
+  .btn--call:focus, .btn--control:hover, .btn--cam:hover,
   .btn--mic:hover,
-  .btn--call:hover, .btn--control:hover, .btn--cam:visited,
+  .btn--call:hover, .btn--control:visited, .btn--cam:visited,
   .btn--mic:visited,
-  .btn--call:visited, .btn--control:visited {
+  .btn--call:visited {
     background: #ffffff;
     color: #101010; }
-    .btn--cam svg, .btn--mic svg, .btn--call svg, .btn--control svg, .btn--cam:active svg, .btn--mic:active svg, .btn--call:active svg, .btn--control:active svg, .btn--cam:focus svg, .btn--mic:focus svg, .btn--call:focus svg, .btn--control:focus svg, .btn--cam:hover svg, .btn--mic:hover svg, .btn--call:hover svg, .btn--control:hover svg, .btn--cam:visited svg, .btn--mic:visited svg, .btn--call:visited svg, .btn--control:visited svg {
+    .btn--control svg, .btn--cam svg, .btn--mic svg, .btn--call svg, .btn--control:active svg, .btn--cam:active svg, .btn--mic:active svg, .btn--call:active svg, .btn--control:focus svg, .btn--cam:focus svg, .btn--mic:focus svg, .btn--call:focus svg, .btn--control:hover svg, .btn--cam:hover svg, .btn--mic:hover svg, .btn--call:hover svg, .btn--control:visited svg, .btn--cam:visited svg, .btn--mic:visited svg, .btn--call:visited svg {
       fill: #101010; }
 
 .btn--connect, .btn--ar {
@@ -3481,6 +3481,10 @@ body {
     justify-content: center;
     align-items: center; }
 
+.btn--connect svg {
+  fill: white;
+  margin-right: 10px; }
+
 .video {
   border-radius: 12px;
   overflow: hidden;
@@ -3489,7 +3493,7 @@ body {
 .video--me {
   width: 120px;
   height: 90px;
-  margin-left: 20px; }
+  margin-left: 200px; }
 
 .video--other {
   width: 320px;
@@ -3498,10 +3502,25 @@ body {
 .group--me {
   display: flex;
   align-items: center; }
+  .group--me.publisher .video--me {
+    margin-left: 20px; }
 
-.btn--connect svg {
-  fill: white;
-  margin-right: 10px; }
+.btn--control {
+  margin-left: 140px; }
+  .btn--control, .btn--control:active, .btn--control:focus, .btn--control:hover, .btn--control:visited {
+    border: 2px solid rgba(16, 16, 16, 0.2);
+    background: transparent;
+    color: #101010; }
+    .btn--control svg, .btn--control:active svg, .btn--control:focus svg, .btn--control:hover svg, .btn--control:visited svg {
+      color: #101010; }
+  .btn--control:hover {
+    border: 2px solid #101010; }
+  .btn--control.active, .btn--control.active:active, .btn--control.active:focus, .btn--control.active:hover, .btn--control.active:visited {
+    border: 2px solid #ff4332;
+    background: #ff4332;
+    color: #ffffff; }
+    .btn--control.active svg, .btn--control.active:active svg, .btn--control.active:focus svg, .btn--control.active:hover svg, .btn--control.active:visited svg {
+      fill: #ffffff; }
 
 .btn--call, .btn--call:active, .btn--call:focus, .btn--call:hover, .btn--call:visited {
   background: #ff4332;
@@ -3535,23 +3554,6 @@ body {
     margin-top: -10px; }
   .btn--heart.active .badge {
     animation: flip-2-hor-top-1 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) both; }
-
-.btn--control {
-  margin-left: 140px; }
-  .btn--control, .btn--control:active, .btn--control:focus, .btn--control:hover, .btn--control:visited {
-    border: 2px solid rgba(16, 16, 16, 0.2);
-    background: transparent;
-    color: #101010; }
-    .btn--control svg, .btn--control:active svg, .btn--control:focus svg, .btn--control:hover svg, .btn--control:visited svg {
-      color: #101010; }
-  .btn--control:hover {
-    border: 2px solid #101010; }
-  .btn--control.active, .btn--control.active:active, .btn--control.active:focus, .btn--control.active:hover, .btn--control.active:visited {
-    border: 2px solid #ff4332;
-    background: #ff4332;
-    color: #ffffff; }
-    .btn--control.active svg, .btn--control.active:active svg, .btn--control.active:focus svg, .btn--control.active:hover svg, .btn--control.active:visited svg {
-      fill: #ffffff; }
 
 @keyframes flip-2-hor-top-1 {
   0% {

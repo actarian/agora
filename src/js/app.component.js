@@ -2,7 +2,7 @@ import { Component, getContext } from 'rxcomp';
 // import UserService from './user/user.service';
 import { FormControl, FormGroup, Validators } from 'rxcomp-form';
 import { first, takeUntil } from 'rxjs/operators';
-import AgoraService from './agora/agora.service';
+import AgoraService, { RoleType } from './agora/agora.service';
 import { BASE_HREF } from './const';
 import HttpService from './http/http.service';
 import LocationService from './location/location.service';
@@ -32,6 +32,7 @@ export class AppComponent extends Component {
 		this.item = null;
 		this.form = null;
 		this.state = {
+			role: LocationService.get('role') || RoleType.Attendee,
 			connecting: false,
 			connected: false,
 			locked: false,
@@ -42,33 +43,15 @@ export class AppComponent extends Component {
 		if (true) {
 			this.state.connected = true;
 		} else {
-			this.agora = new AgoraService();
+			this.agora = new AgoraService(state);
 		}
 		this.loadData();
-		this.addListeners();
-	}
-
-	onDestroy() {
-		this.removeListeners();
 	}
 
 	onPrevent(event) {
 		event.preventDefault();
-	}
-
-	addListeners() {
-		this.onPrevent = this.onPrevent.bind(this);
-		const { node } = getContext(this);
-		const lock = node.querySelector('.ui__lock');
-		lock.addEventListener('mousedown', this.onPrevent);
-		lock.addEventListener('touchstart', this.onPrevent);
-	}
-
-	removeListeners() {
-		const { node } = getContext(this);
-		const lock = node.querySelector('.ui__lock');
-		lock.removeEventListener('mousedown', this.onPrevent);
-		lock.removeEventListener('touchstart', this.onPrevent);
+		event.stopImmediatePropagation();
+		console.log('onPrevent');
 	}
 
 	loadData() {

@@ -21,8 +21,8 @@
 				<div control-custom-select [control]="controls.product" label="Prodotto"></div>
 			</form>
 		</div>
-		<div class="group--me">
-			<button type="button" class="btn--control" [class]="{ active: state.control }" (click)="toggleControl($event)">
+		<div class="group--me" [class]="{ publisher: state.role == 'publisher' }">
+			<button type="button" class="btn--control" [class]="{ active: state.control }" (click)="toggleControl($event)" *if="state.role == 'publisher'">
 				<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#gamepad"></use></svg>
 			</button>
 			<div class="video video--me"></div>
@@ -98,7 +98,7 @@
 		</div>
 	</div>
 
-	<div class="ui__lock" *if="state.locked"></div>
+	<div class="ui__lock" (mousedown)="onPrevent($event)" (touchstart)="onPrevent($event)" *if="state.locked"></div>
 
 </div>
 
