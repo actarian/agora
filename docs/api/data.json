@@ -1,0 +1,96 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Unisex 100",
+      "likes": 82,
+      "added": false,
+      "ar": "#",
+      "items": [
+        {
+          "id": 11,
+          "type": "gltf",
+          "title": "modello 3d",
+          "envMapFolder": "equirectangular/",
+          "envMapFile": "sculpture_exhibition_1k.hdr",
+          "gltfFolder": "boots/gltf/",
+          "gltfFile": "boot.gltf"
+        },
+        {
+          "id": 12,
+          "type": "gltf",
+          "title": "modello 3d",
+          "envMapFolder": "equirectangular/",
+          "envMapFile": "sculpture_exhibition_1k.hdr",
+          "gltfFolder": "damaged-helmet/gltf/",
+          "gltfFile": "damaged-helmet.gltf"
+        },
+        {
+          "id": 13,
+          "type": "picture",
+          "title": "modello 3d",
+          "image": "https://source.unsplash.com/random/800x600"
+        },
+        {
+          "id": 14,
+          "type": "picture",
+          "title": "modello 3d",
+          "image": "https://source.unsplash.com/random/800x600"
+        },
+        {
+          "id": 15,
+          "type": "text",
+          "title": "Titolo",
+          "abstract": "Abstract",
+          "description": "Lorem ipsum"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Unisex 110_BP",
+      "likes": 146,
+      "added": false,
+      "ar": "#",
+      "items": [
+        {
+          "id": 21,
+          "type": "gltf",
+          "title": "modello 3d",
+          "envMapFolder": "equirectangular/",
+          "envMapFile": "sculpture_exhibition_1k.hdr",
+          "gltfFolder": "boots/gltf/",
+          "gltfFile": "boot.gltf"
+        },
+        {
+          "id": 22,
+          "type": "gltf",
+          "title": "modello 3d",
+          "envMapFolder": "equirectangular/",
+          "envMapFile": "sculpture_exhibition_1k.hdr",
+          "gltfFolder": "damaged-helmet/gltf/",
+          "gltfFile": "damaged-helmet.gltf"
+        },
+        {
+          "id": 23,
+          "type": "picture",
+          "title": "modello 3d",
+          "image": "https://source.unsplash.com/random/800x600"
+        },
+        {
+          "id": 24,
+          "type": "picture",
+          "title": "modello 3d",
+          "image": "https://source.unsplash.com/random/800x600"
+        },
+        {
+          "id": 25,
+          "type": "text",
+          "title": "Titolo",
+          "abstract": "Abstract",
+          "description": "Lorem ipsum"
+        }
+      ]
+    }
+  ]
+}

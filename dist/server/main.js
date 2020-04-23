@@ -6,11 +6,17 @@
 
 'use strict';
 
+var DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
 var environment = {
   appKey: 'ab4289a46cd34da6a61fd8d66774b65f',
   appCertificate: '',
   channelName: 'Channel',
-  port: 5000
+  port: 5000,
+  apiEnabled: false,
+  paths: {
+    models: 'models/',
+    textures: 'textures/'
+  }
 };
 
 var express = require('express');

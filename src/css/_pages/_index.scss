@@ -9,9 +9,18 @@ body {
 	overflow: hidden;
 }
 
+.app {
+	width: 100%;
+	height: 100%;
+}
+
 .ui {
 	width: 100%;
 	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
 }
 
 .ui__head {
@@ -23,17 +32,55 @@ body {
 	left: 0;
 	width: 100%;
 	padding: 15px;
+	z-index: 1;
+}
+
+.ui__body {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+
+	background: #bdbdbd;
+	/* Old browsers */
+	background: linear-gradient(to bottom, #bdbdbd 1%, #ffffff 50%, #bdbdbd 100%);
+	/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	// filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bdbdbd', endColorstr='#bdbdbd',GradientType=0 ); /* IE6-9 */
 }
 
 .ui__foot {
 	position: absolute;
-	bottom: 0;
+	bottom: 10px;
 	left: 0;
 	width: 100%;
 	display: flex;
-	justify-content: center;
+	justify-content: space-between;
 	align-items: center;
 	padding: 15px;
+	z-index: 1;
+
+	.left,
+	.right {
+		flex: 0 1 200px;
+	}
+
+	.right {
+		text-align: right;
+	}
+
+	.center {
+		flex: 1 1 calc(100% - 240px);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+}
+
+.ui__lock {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	border: $foreground-primary solid 5px;
+	z-index: 100;
 }
 
 .group--controls {
@@ -52,11 +99,6 @@ body {
 }
 
 .model-viewer__view {
-	background: #bdbdbd;
-	/* Old browsers */
-	background: linear-gradient(to bottom, #bdbdbd 1%, #ffffff 50%, #bdbdbd 100%);
-	/* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-	// filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bdbdbd', endColorstr='#bdbdbd',GradientType=0 ); /* IE6-9 */
 
 	&,
 	& canvas {
@@ -64,6 +106,39 @@ body {
 		height: 100vh;
 		outline: none;
 	}
+
+	canvas {
+		position: absolute;
+		top: 0;
+		left: 0;
+	}
+
+	.slider-container,
+	.slider-inner,
+	.slider-slide {
+		height: 100%;
+	}
+
+	.slider-inner {
+		display: flex;
+	}
+
+	.slider-slide {
+		flex: 0 0 100vw;
+		width: 100vw;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		&>div {
+			width: 80%;
+			height: 80%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+	}
+
 }
 
 .video {
@@ -79,15 +154,139 @@ body {
 
 .video--me {
 	@include ratio(120px, 4 / 3);
+	margin-left: 20px;
 }
 
 .video--other {
 	@include ratio(320px, 4 / 3);
 }
 
+.group--me {
+	display: flex;
+	align-items: center;
+}
+
+.btn--connect {
+	@extend %btn-rect;
+
+	svg {
+		fill: white;
+		margin-right: 10px;
+	}
+}
+
 .btn--cam,
 .btn--mic,
 .btn--call {
 	@extend %btn-circle;
-	background: white;
+}
+
+.btn--call {
+
+	&,
+	&:active,
+	&:focus,
+	&:hover,
+	&:visited {
+		background: $foreground-primary;
+		color: $foreground-negative;
+
+		svg {
+			fill: $foreground-negative;
+		}
+	}
+}
+
+.btn--heart {
+	@extend %btn-reset;
+	position: relative;
+	line-height: 0;
+	margin: 0 40px 0 0;
+	padding: 0;
+
+	svg {
+		fill: #ff4332;
+		width: 40px;
+		height: 40px;
+	}
+
+	.badge {
+		position: absolute;
+		width: 20px;
+		height: 20px;
+		background: white;
+		border-radius: 10px;
+		font-weight: 900;
+		font-size: 10px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		line-height: 1;
+		right: -10px;
+		bottom: 0;
+		margin-top: -10px;
+	}
+
+	&.active {
+		.badge {
+			animation: flip-2-hor-top-1 0.5s cubic-bezier(0.455, 0.030, 0.515, 0.955) both;
+		}
+	}
+
+}
+
+.btn--control {
+	@extend %btn-circle;
+	margin-left: 140px;
+
+	&,
+	&:active,
+	&:focus,
+	&:hover,
+	&:visited {
+		border: 2px solid rgba($foreground, 0.2);
+		background: transparent;
+		color: $foreground;
+
+		svg {
+			color: $foreground;
+		}
+	}
+
+	&:hover {
+		border: 2px solid rgba($foreground, 1.0);
+	}
+
+	&.active {
+
+		&,
+		&:active,
+		&:focus,
+		&:hover,
+		&:visited {
+			border: 2px solid rgba($foreground-primary, 1.0);
+			background: $foreground-primary;
+			color: $foreground-negative;
+
+			svg {
+				fill: $foreground-negative;
+			}
+		}
+	}
+}
+
+.btn--ar {
+	@extend %btn-rect;
+}
+
+@keyframes flip-2-hor-top-1 {
+	0% {
+		transform: translateY(0) rotateX(0);
+		transform-origin: 50% 0%;
+	}
+
+	100% {
+		transform: translateY(0) rotateX(-360deg);
+		transform-origin: 50% 100%;
+	}
 }

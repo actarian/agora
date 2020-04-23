@@ -21,7 +21,7 @@
     "events": "~3.1.0",
     "agora-rtc-sdk": "~3.0.2",
     "agora-rtm-sdk": "~1.2.2",
-    "gsap": "~3.2.1",
+    "gsap": "~3.2.6",
     "rxjs": "~6.5.4",
     "rxcomp": "~1.0.0-beta.9",
     "rxcomp-form": "~1.0.0-beta.9",

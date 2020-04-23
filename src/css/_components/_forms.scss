@@ -1,13 +1,13 @@
 $family: $font-secondary;
 $size: 34px;
-$weight: $font-medium;
+$weight: $font-light;
 $spacing: 0;
 $line: 1; // always
-$pristine: #16255b;
-$dirty: #16255b;
-$touched: #16255b;
-$valid: #16255b;
-$invalid: #dc1216;
+$pristine: $foreground;
+$dirty: $foreground;
+$touched: $foreground;
+$valid: $foreground;
+$invalid: $foreground-primary;
 
 %btn--disabled {
 	opacity: 0.5;
@@ -18,9 +18,10 @@ $invalid: #dc1216;
 %label {
 	display: block;
 	flex: 0 0 100%;
-	font-family: $family;
-	font-size: 16px;
-	font-weight: $weight;
+	font-family: $font-secondary;
+	font-size: 13px;
+	opacity: 0.3;
+	font-weight: $font-semibold;
 	line-height: $line;
 	margin-bottom: -1px;
 	color: $pristine;
@@ -152,12 +153,11 @@ $invalid: #dc1216;
 	}
 
 	[control-custom-select] .dropdown {
-		// top: 63px;
-		// left: 0px;
 		top: 100%;
 		width: 100%;
-		margin-top: -14px;
+		margin-top: 10px;
 		left: 0;
+		border-radius: 12px;
 	}
 
 }
@@ -211,10 +211,10 @@ fieldset,
 .group--form--select {
 	@extend %group--form;
 	position: relative;
+	background: $background;
 	border: none;
-	background: $background-secondary;
-	padding: 10px 10px;
-	margin-top: 13px;
+	border-radius: 12px;
+	padding: 8px 15px;
 	cursor: pointer;
 
 	input {
@@ -222,9 +222,15 @@ fieldset,
 	}
 
 	.icon--caret-down {
-		margin: 5px 15px 0 0;
-		fill: $pristine;
+		width: 12px;
+		height: 12px;
+		margin: 0;
+		fill: #ccc;
 		pointer-events: none;
+	}
+
+	&.required .required__badge {
+		display: none;
 	}
 
 	@include media-down(xs) {

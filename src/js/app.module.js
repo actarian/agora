@@ -1,6 +1,16 @@
 import { CoreModule, Module } from 'rxcomp';
 import { FormModule } from 'rxcomp-form';
-import AppComponent from './app.component';
+import { AppComponent } from './app.component';
+import DropdownItemDirective from './dropdown/dropdown-item.directive';
+import DropdownDirective from './dropdown/dropdown.directive';
+import ControlCustomSelectComponent from './forms/control-custom-select.component';
+import { ModelGltfComponent } from './model-viewer/model-gltf.component';
+import { ModelPictureComponent } from './model-viewer/model-picture.component';
+import { ModelTextComponent } from './model-viewer/model-text.component';
+import { ModelViewerComponent } from './model-viewer/model-viewer.component';
+import { ModelComponent } from './model-viewer/model.component';
+import { SliderDirective } from './slider/slider.directive';
+
 /*
 import AgentsComponent from './agents/agents.component';
 import AppearDirective from './appear/appear.directive';
@@ -14,10 +24,7 @@ import ClubProfileComponent from './club/club-profile.component';
 import ClubSigninComponent from './club/club-signin.component';
 import ClubSignupComponent from './club/club-signup.component';
 import ClubComponent from './club/club.component';
-import DropdownItemDirective from './dropdown/dropdown-item.directive';
-import DropdownDirective from './dropdown/dropdown.directive';
 import ControlCheckboxComponent from './forms/control-checkbox.component';
-import ControlCustomSelectComponent from './forms/control-custom-select.component';
 import ControlEmailComponent from './forms/control-email.component';
 import ControlFileComponent from './forms/control-file.component';
 import ControlPasswordComponent from './forms/control-password.component';
@@ -55,9 +62,8 @@ import WorkWithUsComponent from './work-with-us/work-with-us.component';
 import YoutubeComponent from './youtube/youtube.component';
 import ZoomableDirective from './zoomable/zoomable.directive';
 */
-import { ModelViewerComponent } from './model-viewer/model-viewer.component';
 
-export default class AppModule extends Module {}
+export class AppModule extends Module {}
 
 AppModule.meta = {
 	imports: [
@@ -65,7 +71,15 @@ AppModule.meta = {
 		FormModule,
 	],
 	declarations: [
+		ModelComponent,
+		ModelGltfComponent,
+		ModelTextComponent,
+		ModelPictureComponent,
 		ModelViewerComponent,
+		ControlCustomSelectComponent,
+		DropdownDirective,
+		DropdownItemDirective,
+		SliderDirective,
 		/*
 		AgentsComponent,
 		AppearDirective,
@@ -80,15 +94,12 @@ AppModule.meta = {
 		ClubSigninComponent,
 		ClubSignupComponent,
 		ControlCheckboxComponent,
-		ControlCustomSelectComponent,
 		ControlEmailComponent,
 		ControlFileComponent,
 		ControlPasswordComponent,
 		ControlSelectComponent,
 		ControlTextComponent,
 		ControlTextareaComponent,
-		DropdownDirective,
-		DropdownItemDirective,
 		ErrorsComponent,
 		FileSizePipe,
 		HtmlPipe,

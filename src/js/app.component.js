@@ -1,14 +1,14 @@
 import { Component, getContext } from 'rxcomp';
-import { takeUntil } from 'rxjs/operators';
+// import UserService from './user/user.service';
+import { FormControl, FormGroup, Validators } from 'rxcomp-form';
+import { first, takeUntil } from 'rxjs/operators';
 import AgoraService from './agora/agora.service';
-import { STATIC } from './environment/environment';
+import { BASE_HREF } from './const';
+import HttpService from './http/http.service';
 import LocationService from './location/location.service';
 import ModalService, { ModalResolveEvent } from './modal/modal.service';
-import UserService from './user/user.service';
 
-const src = STATIC ? '/agora/club-modal.html' : '/Viewdoc.cshtml?co_id=23649';
-
-export default class AppComponent extends Component {
+export class AppComponent extends Component {
 
 	// !!! require localhost or https
 
@@ -28,12 +28,103 @@ export default class AppComponent extends Component {
 			this.parseQueryString();
 		}, 500);
 		*/
-		this.useAgora();
+		this.items = [];
+		this.item = null;
+		this.form = null;
+		this.state = {
+			connecting: false,
+			connected: false,
+			locked: false,
+			control: false,
+			cameraMuted: false,
+			audioMuted: false,
+		};
+		if (true) {
+			this.state.connected = true;
+		} else {
+			this.agora = new AgoraService();
+		}
+		this.loadData();
+		this.addListeners();
 	}
 
-	useAgora() {
-		const agora = new AgoraService();
-		agora.connect();
+	onDestroy() {
+		this.removeListeners();
+	}
+
+	onPrevent(event) {
+		event.preventDefault();
+	}
+
+	addListeners() {
+		this.onPrevent = this.onPrevent.bind(this);
+		const { node } = getContext(this);
+		const lock = node.querySelector('.ui__lock');
+		lock.addEventListener('mousedown', this.onPrevent);
+		lock.addEventListener('touchstart', this.onPrevent);
+	}
+
+	removeListeners() {
+		const { node } = getContext(this);
+		const lock = node.querySelector('.ui__lock');
+		lock.removeEventListener('mousedown', this.onPrevent);
+		lock.removeEventListener('touchstart', this.onPrevent);
+	}
+
+	loadData() {
+		HttpService.get$(BASE_HREF + 'api/data.json').pipe(
+			first()
+		).subscribe(data => {
+			this.data = data;
+			this.initForm();
+		});
+	}
+
+	initForm() {
+		const data = this.data;
+
+		const form = this.form = new FormGroup({
+			product: new FormControl(data.products[0].id, Validators.RequiredValidator()),
+		});
+
+		const controls = this.controls = form.controls;
+		controls.product.options = data.products;
+
+		form.changes$.pipe(
+			takeUntil(this.unsubscribe$)
+		).subscribe((changes) => {
+			// console.log('form.changes$', changes, form.valid);
+			console.log(changes.product);
+			const product = data.products.find(x => x.id === changes.product);
+			this.items = [];
+			this.item = null;
+			this.pushChanges();
+			setTimeout(() => {
+				this.items = product ? product.items : [];
+				this.item = product;
+				this.pushChanges();
+			}, 1);
+		});
+	}
+
+	connect() {
+		this.state.connecting = true;
+		this.pushChanges();
+		setTimeout(() => {
+			this.agora.connect$().pipe(
+				takeUntil(this.unsubscribe$)
+			).subscribe((state) => {
+				this.state = Object.assign(this.state, state);
+				if (this.state.connected === false) {
+					this.state.connecting = false;
+				}
+				this.pushChanges();
+			});
+		}, 1000);
+	}
+
+	disconnect() {
+		this.agora.leaveChannel();
 	}
 
 	onDropped(id) {
@@ -76,6 +167,33 @@ export default class AppComponent extends Component {
 	// onChanges() {}
 
 	// onDestroy() {}
+
+	toggleCamera() {
+		if (this.agora) {
+			this.agora.toggleCamera();
+		}
+	}
+
+	toggleAudio() {
+		if (this.agora) {
+			this.agora.toggleAudio();
+		}
+	}
+
+	toggleControl() {
+		if (this.agora) {
+			this.agora.toggleControl();
+		}
+	}
+
+	addToWishlist() {
+		if (!this.item.added) {
+			this.item.added = true;
+			this.item.likes++;
+			this.pushChanges();
+		}
+	}
+
 }
 
 AppComponent.meta = {
