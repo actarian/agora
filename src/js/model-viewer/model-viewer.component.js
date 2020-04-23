@@ -24,7 +24,6 @@ export class ModelViewerComponent extends Component {
 		this.removeListeners();
 		const renderer = this.renderer;
 		renderer.setAnimationLoop(() => {});
-		renderer.destroy();
 	}
 
 	createScene() {

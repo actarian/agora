@@ -341,7 +341,7 @@
               _this4.setState({
                 connected: true
               });
-            }, 5000);
+            }, 2000);
           }, function (error) {// console.log('joinMessageChannel.error', error);
           });
         }); // !!! require localhost or https
@@ -926,6 +926,7 @@
 
       {
         this.agora = new AgoraService(this.state);
+        this.state = this.agora.state;
       }
 
       this.loadData();
@@ -979,22 +980,21 @@
     _proto.connect = function connect() {
       var _this3 = this;
 
-      this.state.connecting = true;
-      this.pushChanges();
-      setTimeout(function () {
-        _this3.agora.connect$().pipe(operators.takeUntil(_this3.unsubscribe$)).subscribe(function (state) {
-          _this3.state = Object.assign(_this3.state, state);
+      if (!this.state.connecting) {
+        this.state.connecting = true;
+        this.pushChanges();
+        setTimeout(function () {
+          _this3.agora.connect$().pipe(operators.takeUntil(_this3.unsubscribe$)).subscribe(function (state) {
+            _this3.state = Object.assign(_this3.state, state);
 
-          if (_this3.state.connected === false) {
-            _this3.state.connecting = false;
-          }
-
-          _this3.pushChanges();
-        });
-      }, 1000);
+            _this3.pushChanges();
+          });
+        }, 1000);
+      }
     };
 
     _proto.disconnect = function disconnect() {
+      this.state.connecting = false;
       this.agora.leaveChannel();
     };
 
@@ -54993,7 +54993,6 @@ void main() {
       this.removeListeners();
       var renderer = this.renderer;
       renderer.setAnimationLoop(function () {});
-      renderer.destroy();
     };
 
     _proto.createScene = function createScene() {

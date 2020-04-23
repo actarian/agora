@@ -44,6 +44,7 @@ export class AppComponent extends Component {
 			this.state.connected = true;
 		} else {
 			this.agora = new AgoraService(this.state);
+			this.state = this.agora.state;
 		}
 		this.loadData();
 	}
@@ -91,22 +92,22 @@ export class AppComponent extends Component {
 	}
 
 	connect() {
-		this.state.connecting = true;
-		this.pushChanges();
-		setTimeout(() => {
-			this.agora.connect$().pipe(
-				takeUntil(this.unsubscribe$)
-			).subscribe((state) => {
-				this.state = Object.assign(this.state, state);
-				if (this.state.connected === false) {
-					this.state.connecting = false;
-				}
-				this.pushChanges();
-			});
-		}, 1000);
+		if (!this.state.connecting) {
+			this.state.connecting = true;
+			this.pushChanges();
+			setTimeout(() => {
+				this.agora.connect$().pipe(
+					takeUntil(this.unsubscribe$)
+				).subscribe((state) => {
+					this.state = Object.assign(this.state, state);
+					this.pushChanges();
+				});
+			}, 1000);
+		}
 	}
 
 	disconnect() {
+		this.state.connecting = false;
 		this.agora.leaveChannel();
 	}
 

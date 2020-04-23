@@ -118,7 +118,7 @@ export default class AgoraService extends Emittable {
 					// console.log('joinMessageChannel.success', success);
 					setTimeout(() => {
 						this.setState({ connected: true });
-					}, 5000);
+					}, 2000);
 				}, error => {
 					// console.log('joinMessageChannel.error', error);
 				});
