@@ -40,10 +40,10 @@ export class AppComponent extends Component {
 			cameraMuted: false,
 			audioMuted: false,
 		};
-		if (true) {
+		if (false) {
 			this.state.connected = true;
 		} else {
-			this.agora = new AgoraService(state);
+			this.agora = new AgoraService(this.state);
 		}
 		this.loadData();
 	}

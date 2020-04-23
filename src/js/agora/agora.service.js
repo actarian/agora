@@ -83,10 +83,10 @@ export default class AgoraService extends Emittable {
 		}
 		// console.log('agora rtc sdk version: ' + AgoraRTC.VERSION + ' compatible: ' + AgoraRTC.checkSystemRequirements());
 		const client = this.client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' }); // rtc
-		client.init(environment.appKey, function() {
+		client.init(environment.appKey, () => {
 			// console.log('AgoraRTC client initialized');
 			next();
-		}, function(error) {
+		}, (error) => {
 			// console.log('AgoraRTC client init failed', error);
 			this.client = null;
 		});
@@ -118,7 +118,7 @@ export default class AgoraService extends Emittable {
 					// console.log('joinMessageChannel.success', success);
 					setTimeout(() => {
 						this.setState({ connected: true });
-					}, 1000);
+					}, 5000);
 				}, error => {
 					// console.log('joinMessageChannel.error', error);
 				});
@@ -130,7 +130,7 @@ export default class AgoraService extends Emittable {
 				const microphoneId = devices.audios.length ? devices.audios[0].deviceId : null;
 				this.createLocalStream(uid, microphoneId, cameraId);
 			});
-		}, function(error) {
+		}, (error) => {
 			console.log('Join channel failed', error);
 		});
 		// https://console.agora.io/invite?sign=YXBwSWQlM0RhYjQyODlhNDZjZDM0ZGE2YTYxZmQ4ZDY2Nzc0YjY1ZiUyNm5hbWUlM0RaYW1wZXR0aSUyNnRpbWVzdGFtcCUzRDE1ODY5NjM0NDU=// join link expire in 30 minutes
@@ -224,7 +224,7 @@ export default class AgoraService extends Emittable {
 				local.play('agora_local_' + local.streamID);
 			}
 			this.publishLocalStream();
-		}, function(error) {
+		}, (error) => {
 			console.log('getUserMedia failed', error);
 		});
 	}
@@ -233,7 +233,7 @@ export default class AgoraService extends Emittable {
 		const client = this.client;
 		const local = this.local;
 		//publish local stream
-		client.publish(local, function(error) {
+		client.publish(local, (error) => {
 			console.log('Publish local stream error: ' + error);
 		});
 	}
@@ -241,21 +241,21 @@ export default class AgoraService extends Emittable {
 	unpublishLocalStream() {
 		const client = this.client;
 		const local = this.local;
-		client.unpublish(local, function(error) {
+		client.unpublish(local, (error) => {
 			console.log('unpublish failed');
 		});
 	}
 
 	leaveChannel() {
 		const client = this.client;
-		client.leave(function() {
+		client.leave(() => {
 			// console.log('Leave channel successfully');
 			this.setState({ connected: false });
 			const messageChannel = this.messageChannel;
 			const messageClient = this.messageClient;
 			messageChannel.leave();
 			messageClient.logout();
-		}, function(error) {
+		}, (error) => {
 			console.log('Leave channel failed');
 		});
 	}
@@ -409,7 +409,7 @@ export default class AgoraService extends Emittable {
 		var id = stream.getId();
 		console.log('New stream added: ' + id);
 		if (id !== this.uid) {
-			client.subscribe(stream, function(error) {
+			client.subscribe(stream, (error) => {
 				console.log('stream subscribe failed', error);
 			});
 		}

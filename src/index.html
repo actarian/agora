@@ -82,7 +82,7 @@
 				<button type="button" class="btn--cam" [class]="{ active: state.cameraMuted }" (click)="toggleCamera()">
 					<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#cam"></use></svg>
 				</button>
-				<button type="button" class="btn--call">
+				<button type="button" class="btn--call" (click)="disconnect()">
 					<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#call"></use></svg>
 				</button>
 				<button type="button" class="btn--mic" [class]="{ active: state.audioMuted }" (click)="toggleAudio()">

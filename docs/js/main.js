@@ -34,6 +34,14 @@
     subClass.__proto__ = superClass;
   }
 
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
   var DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
   var environment = {
     appKey: 'ab4289a46cd34da6a61fd8d66774b65f',
@@ -46,6 +54,69 @@
       textures: 'textures/'
     }
   };
+
+  var Emittable = /*#__PURE__*/function () {
+    function Emittable() {
+      this.events = {};
+    }
+
+    var _proto = Emittable.prototype;
+
+    _proto.on = function on(type, callback) {
+      var _this = this;
+
+      var event = this.events[type] = this.events[type] || [];
+      event.push(callback);
+      return function () {
+        _this.events[type] = event.filter(function (x) {
+          return x !== callback;
+        });
+      };
+    };
+
+    _proto.off = function off(type, callback) {
+      var event = this.events[type];
+
+      if (event) {
+        this.events[type] = event.filter(function (x) {
+          return x !== callback;
+        });
+      }
+    };
+
+    _proto.once = function once(type, callback) {
+      var _this2 = this;
+
+      var once = function once(data) {
+        callback(data);
+
+        _this2.off(type, once);
+      };
+
+      this.on(type, once);
+    };
+
+    _proto.emit = function emit(type, data) {
+      var event = this.events[type];
+
+      if (event) {
+        event.forEach(function (callback) {
+          // callback.call(this, data);
+          callback(data);
+        });
+      }
+
+      var broadcast = this.events.broadcast;
+
+      if (broadcast) {
+        broadcast.forEach(function (callback) {
+          callback(type, data);
+        });
+      }
+    };
+
+    return Emittable;
+  }();
 
   var STATIC = window.location.port === '41999' || window.location.host === 'actarian.github.io';
   var DEVELOPMENT$1 = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
@@ -140,6 +211,530 @@
     Attendee: 'attendee',
     Publisher: 'publisher'
   };
+  var MessageType = {
+    Ping: 'ping',
+    RequestControl: 'requestControl',
+    RequestControlAccepted: 'requestControlAccepted',
+    RequestControlRejected: 'requestControlRejected',
+    RequestControlDismiss: 'requestControlDismiss',
+    RequestControlDismissed: 'requestControlDismissed'
+  };
+
+  var AgoraService = /*#__PURE__*/function (_Emittable) {
+    _inheritsLoose(AgoraService, _Emittable);
+
+    function AgoraService(state) {
+      var _this;
+
+      _this = _Emittable.call(this) || this;
+      _this.onStreamPublished = _this.onStreamPublished.bind(_assertThisInitialized(_this));
+      _this.onStreamAdded = _this.onStreamAdded.bind(_assertThisInitialized(_this));
+      _this.onStreamSubscribed = _this.onStreamSubscribed.bind(_assertThisInitialized(_this));
+      _this.onStreamRemoved = _this.onStreamRemoved.bind(_assertThisInitialized(_this));
+      _this.onPeerLeaved = _this.onPeerLeaved.bind(_assertThisInitialized(_this));
+      _this.onTokenPrivilegeWillExpire = _this.onTokenPrivilegeWillExpire.bind(_assertThisInitialized(_this));
+      _this.onTokenPrivilegeDidExpire = _this.onTokenPrivilegeDidExpire.bind(_assertThisInitialized(_this));
+      _this.state = {
+        role: RoleType.ATTENDEE,
+        connected: false,
+        locked: false,
+        control: false,
+        cameraMuted: true,
+        audioMuted: true
+      };
+
+      if (state) {
+        _this.state = Object.assign(_this.state, state);
+      }
+
+      _this.state$ = new rxjs.BehaviorSubject(_this.state);
+      return _this;
+    }
+
+    var _proto = AgoraService.prototype;
+
+    _proto.setState = function setState(state) {
+      Object.assign(this.state, state);
+      this.state$.next(this.state);
+    };
+
+    _proto.connect$ = function connect$() {
+      var _this2 = this;
+
+      this.createClient(function () {
+        _this2.getRtcToken().subscribe(function (token) {
+          // console.log('token', token);
+          _this2.joinChannel(token.token);
+        });
+      });
+      return this.state$;
+    };
+
+    _proto.getRtcToken = function getRtcToken() {
+      {
+        return rxjs.of({
+          token: null
+        });
+      }
+    };
+
+    _proto.getRtmToken = function getRtmToken(uid) {
+      {
+        return rxjs.of({
+          token: null
+        });
+      }
+    };
+
+    _proto.createClient = function createClient(next) {
+      var _this3 = this;
+
+      if (this.client) {
+        next();
+      } // console.log('agora rtc sdk version: ' + AgoraRTC.VERSION + ' compatible: ' + AgoraRTC.checkSystemRequirements());
+
+
+      var client = this.client = AgoraRTC.createClient({
+        mode: 'live',
+        codec: 'h264'
+      }); // rtc
+
+      client.init(environment.appKey, function () {
+        // console.log('AgoraRTC client initialized');
+        next();
+      }, function (error) {
+        // console.log('AgoraRTC client init failed', error);
+        _this3.client = null;
+      });
+      client.on('stream-published', this.onStreamPublished); //subscribe remote stream
+
+      client.on('stream-added', this.onStreamAdded);
+      client.on('stream-subscribed', this.onStreamSubscribed);
+      client.on('error', this.onError); // Occurs when the peer user leaves the channel; for example, the peer user calls Client.leave.
+
+      client.on('peer-leave', this.onPeerLeaved);
+      client.on('stream-removed', this.onStreamRemoved);
+      client.on('onTokenPrivilegeWillExpire', this.onTokenPrivilegeWillExpire);
+      client.on('onTokenPrivilegeDidExpire', this.onTokenPrivilegeDidExpire); // console.log('agora rtm sdk version: ' + AgoraRTM.VERSION + ' compatible');
+
+      var messageClient = this.messageClient = AgoraRTM.createInstance(environment.appKey, {
+        logFilter: AgoraRTM.LOG_FILTER_DEBUG
+      });
+      messageClient.on('ConnectionStateChanged', console.error);
+      messageClient.on('MessageFromPeer', console.warn);
+    };
+
+    _proto.joinChannel = function joinChannel(token) {
+      var _this4 = this;
+
+      var client = this.client;
+      var uid = null;
+      token = null; // !!!
+
+      client.join(token, environment.channelName, uid, function (uid) {
+        // console.log('User ' + uid + ' join channel successfully');
+        _this4.getRtmToken(uid).subscribe(function (token) {
+          // console.log('token', token);
+          _this4.joinMessageChannel(token.token, uid).then(function (success) {
+            // console.log('joinMessageChannel.success', success);
+            setTimeout(function () {
+              _this4.setState({
+                connected: true
+              });
+            }, 5000);
+          }, function (error) {// console.log('joinMessageChannel.error', error);
+          });
+        }); // !!! require localhost or https
+
+
+        _this4.detectDevices(function (devices) {
+          // console.log(devices);
+          var cameraId = devices.videos.length ? devices.videos[0].deviceId : null;
+          var microphoneId = devices.audios.length ? devices.audios[0].deviceId : null;
+
+          _this4.createLocalStream(uid, microphoneId, cameraId);
+        });
+      }, function (error) {
+        console.log('Join channel failed', error);
+      }); // https://console.agora.io/invite?sign=YXBwSWQlM0RhYjQyODlhNDZjZDM0ZGE2YTYxZmQ4ZDY2Nzc0YjY1ZiUyNm5hbWUlM0RaYW1wZXR0aSUyNnRpbWVzdGFtcCUzRDE1ODY5NjM0NDU=// join link expire in 30 minutes
+    };
+
+    _proto.joinMessageChannel = function joinMessageChannel(token, uid) {
+      var _this5 = this;
+
+      return new Promise(function (resolve, reject) {
+        var messageClient = _this5.messageClient;
+
+        messageClient.login({
+          uid: uid.toString()
+        }).then(function () {
+          _this5.messageChannel = messageClient.createChannel(environment.channelName);
+          return _this5.messageChannel.join();
+        }).then(function () {
+          _this5.messageChannel.on('ChannelMessage', _this5.onMessage);
+
+          resolve(uid);
+        }).catch(reject);
+      });
+    };
+
+    _proto.sendMessage = function sendMessage(message) {
+      var _this6 = this;
+
+      message.wrc_version = 'beta';
+      message.uid = this.uid;
+      var messageChannel = this.messageChannel;
+      messageChannel.sendMessage({
+        text: JSON.stringify(message)
+      }); // console.log('wrc: send', message);
+
+      if (message.rpcid) {
+        return new Promise(function (resolve) {
+          _this6.once("message-" + message.rpcid, function (message) {
+            resolve(message);
+          });
+        });
+      } else {
+        return Promise.resolve(message);
+      }
+    };
+
+    _proto.detectDevices = function detectDevices(next) {
+      AgoraRTC.getDevices(function (devices) {
+        devices.filter(function (device) {
+          return ['audioinput', 'videoinput'].indexOf(device.kind) !== -1;
+        }).map(function (device) {
+          return {
+            label: device.label,
+            deviceId: device.deviceId,
+            kind: device.kind
+          };
+        });
+        var videos = [];
+        var audios = [];
+
+        for (var i = 0; i < devices.length; i++) {
+          var device = devices[i];
+
+          if ('videoinput' == device.kind) {
+            videos.push({
+              label: device.label || 'camera-' + videos.length,
+              deviceId: device.deviceId,
+              kind: device.kind
+            });
+          }
+
+          if ('audioinput' == device.kind) {
+            audios.push({
+              label: device.label || 'microphone-' + videos.length,
+              deviceId: device.deviceId,
+              kind: device.kind
+            });
+          }
+        }
+
+        next({
+          videos: videos,
+          audios: audios
+        });
+      });
+    };
+
+    _proto.createLocalStream = function createLocalStream(uid, microphoneId, cameraId) {
+      var local = this.local = AgoraRTC.createStream({
+        streamID: uid,
+        microphoneId: microphoneId,
+        cameraId: cameraId,
+        audio: microphoneId ? true : false,
+        video: cameraId ? true : false,
+        screen: false
+      });
+      this.initLocalStream();
+    };
+
+    _proto.initLocalStream = function initLocalStream() {
+      var _this7 = this;
+
+      var client = this.client;
+      var local = this.local;
+      local.init(function () {
+        // console.log('getUserMedia successfully');
+        var video = document.querySelector('.video--me');
+
+        if (video) {
+          video.setAttribute('id', 'agora_local_' + local.streamID);
+          local.play('agora_local_' + local.streamID);
+        }
+
+        _this7.publishLocalStream();
+      }, function (error) {
+        console.log('getUserMedia failed', error);
+      });
+    };
+
+    _proto.publishLocalStream = function publishLocalStream() {
+      var client = this.client;
+      var local = this.local; //publish local stream
+
+      client.publish(local, function (error) {
+        console.log('Publish local stream error: ' + error);
+      });
+    };
+
+    _proto.unpublishLocalStream = function unpublishLocalStream() {
+      var client = this.client;
+      var local = this.local;
+      client.unpublish(local, function (error) {
+        console.log('unpublish failed');
+      });
+    };
+
+    _proto.leaveChannel = function leaveChannel() {
+      var _this8 = this;
+
+      var client = this.client;
+      client.leave(function () {
+        // console.log('Leave channel successfully');
+        _this8.setState({
+          connected: false
+        });
+
+        var messageChannel = _this8.messageChannel;
+        var messageClient = _this8.messageClient;
+        messageChannel.leave();
+        messageClient.logout();
+      }, function (error) {
+        console.log('Leave channel failed');
+      });
+    };
+
+    _proto.toggleCamera = function toggleCamera() {
+      var local = this.local;
+      console.log(local);
+
+      if (local) {
+        if (local.video) {
+          local.muteVideo();
+        } else {
+          local.unmuteVideo();
+        }
+      }
+    };
+
+    _proto.toggleAudio = function toggleAudio() {
+      var local = this.local;
+      console.log(local);
+
+      if (local) {
+        if (local.audio) {
+          local.muteAudio();
+        } else {
+          local.unmuteAudio();
+        }
+      }
+    };
+
+    _proto.toggleControl = function toggleControl() {
+      var _this9 = this;
+
+      if (this.control) {
+        this.sendRemoteControlDismiss(function (control) {
+          _this9.setState({
+            control: !control
+          });
+        });
+      } else {
+        this.sendRemoteControlRequest(function (control) {
+          _this9.setState({
+            control: control
+          });
+        });
+      }
+    };
+
+    _proto.getRemoteTargetUID = function getRemoteTargetUID() {
+      if (!this.rtmChannel || !this.cname) {
+        throw new Error("not join channel");
+      }
+
+      return this.sendMessage({
+        type: MessageType.Ping,
+        rpcid: Date.now().toString()
+      }).then(function (message) {
+        return message.payload.uid;
+      });
+    };
+
+    _proto.sendRemoteControlDismiss = function sendRemoteControlDismiss(message) {
+      var _this10 = this;
+
+      return new Promise(function (resolve, reject) {
+        _this10.sendMessage({
+          type: MessageType.RequestControlDismiss,
+          rpcid: Date.now().toString(),
+          payload: {
+            message: message
+          }
+        }).then(function (message) {
+          if (message.type === MessageType.RequestControlDismissed) {
+            resolve(true);
+          } else if (message.type === MessageType.RequestControlRejected) {
+            resolve(false);
+          }
+        });
+      });
+    };
+
+    _proto.sendRemoteControlRequest = function sendRemoteControlRequest(message) {
+      var _this11 = this;
+
+      return new Promise(function (resolve, reject) {
+        _this11.sendMessage({
+          type: MessageType.RequestControl,
+          rpcid: Date.now().toString(),
+          payload: {
+            message: message
+          }
+        }).then(function (message) {
+          if (message.type === MessageType.RequestControlAccepted) {
+            /*
+            this.remoteDeviceInfo = message.payload;
+            if (this.playerElement) {
+            this.remoteStream.play(this.playerElement.id, { fit: 'contain', muted: true });
+            this.controlMouse()
+            resolve(true);
+            return;
+            } else {
+            reject('request not accepted');
+            }
+            */
+            resolve(true);
+          } else if (message.type === MessageType.RequestControlRejected) {
+            // this.remoteDeviceInfo = undefined
+            resolve(false);
+          }
+        });
+      });
+    };
+
+    _proto.getSessionStats = function getSessionStats() {
+      var client = this.client;
+      client.getSessionStats(function (stats) {
+        console.log("Current Session Duration: " + stats.Duration);
+        console.log("Current Session UserCount: " + stats.UserCount);
+        console.log("Current Session SendBytes: " + stats.SendBytes);
+        console.log("Current Session RecvBytes: " + stats.RecvBytes);
+        console.log("Current Session SendBitrate: " + stats.SendBitrate);
+        console.log("Current Session RecvBitrate: " + stats.RecvBitrate);
+      });
+    };
+
+    _proto.getSystemStats = function getSystemStats() {
+      var client = this.client;
+      client.getSystemStats(function (stats) {
+        console.log("Current battery level: " + stats.BatteryLevel);
+      });
+    } // events
+    ;
+
+    _proto.onError = function onError(error) {
+      console.log('Agora', error);
+    };
+
+    _proto.onMessage = function onMessage(data, uid) {
+      if (uid !== this.uid) {
+        var message = JSON.parse(data.text);
+        console.log('wrc: receive', message);
+
+        if (message.rpcid) {
+          this.emit("message-" + message.rpcid, message);
+        }
+        /*
+        // this.emit('wrc-message', message);
+        if (message.type === WRCMessageType.WRC_CLOSE) {
+          console.log('receive wrc close')
+          this.cleanRemote()
+          this.emit('remote-close')
+        }
+        */
+
+      }
+    };
+
+    _proto.onStreamPublished = function onStreamPublished(event) {
+      console.log('Publish local stream successfully');
+    };
+
+    _proto.onStreamAdded = function onStreamAdded(event) {
+      var client = this.client;
+      var stream = event.stream;
+      var id = stream.getId();
+      console.log('New stream added: ' + id);
+
+      if (id !== this.uid) {
+        client.subscribe(stream, function (error) {
+          console.log('stream subscribe failed', error);
+        });
+      }
+    };
+
+    _proto.onStreamSubscribed = function onStreamSubscribed(event) {
+      var stream = event.stream;
+      var id = stream.getId();
+      console.log('Subscribe remote stream successfully: ' + id);
+      var video = document.querySelector('.video--other');
+
+      if (video) {
+        video.setAttribute('id', 'agora_remote_' + id);
+        video.classList.add('playing');
+      } // console.log('video', video);
+
+
+      stream.play('agora_remote_' + id);
+    } // Occurs when the remote stream is removed; for example, a peer user calls Client.unpublish.
+    ;
+
+    _proto.onStreamRemoved = function onStreamRemoved(event) {
+      var stream = event.stream;
+      var id = stream.getId(); // console.log('stream-removed remote-uid: ', id);
+
+      if (id !== this.uid) {
+        stream.stop('agora_remote_' + id);
+        var video = document.querySelector('.video--other');
+
+        if (video) {
+          video.classList.remove('playing');
+        }
+      } // console.log('stream-removed remote-uid: ', id);
+
+    };
+
+    _proto.onPeerLeaved = function onPeerLeaved(event) {
+      var id = event.uid; // console.log('peer-leave id', id);
+
+      if (id !== this.uid) {
+        var video = document.querySelector('.video--other');
+
+        if (video) {
+          video.classList.remove('playing');
+        }
+      }
+    };
+
+    _proto.onTokenPrivilegeWillExpire = function onTokenPrivilegeWillExpire(event) {
+      // After requesting a new token
+      // client.renewToken(token);
+      console.log('onTokenPrivilegeWillExpire');
+    };
+
+    _proto.onTokenPrivilegeDidExpire = function onTokenPrivilegeDidExpire(event) {
+      // After requesting a new token
+      // client.renewToken(token);
+      console.log('onTokenPrivilegeDidExpire');
+    };
+
+    return AgoraService;
+  }(Emittable);
 
   var BASE_HREF = document.querySelector('base').getAttribute('href');
 
@@ -330,7 +925,7 @@
       };
 
       {
-        this.state.connected = true;
+        this.agora = new AgoraService(this.state);
       }
 
       this.loadData();
