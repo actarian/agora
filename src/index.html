@@ -30,7 +30,7 @@
 	</div>
 
 	<div class="ui__body">
-		<div class="model-viewer" model-viewer [items]="items">
+		<div class="model-viewer" model-viewer [items]="items" (change)="onChange($event)" (rotate)="onRotate($event)">
 			<div class="model-viewer__view">
 				<!-- slider -->
 				<div class="slider-container" slider [items]="items" (tween)="onTween($event)" (change)="onChange($event)" *if="items.length">

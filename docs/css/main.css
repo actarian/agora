@@ -204,8 +204,9 @@ strong {
 
 .btn--control, .btn--cam,
 .btn--mic,
-.btn--call, .btn--connect, .btn--ar, .btn, a,
-button, .btn--heart {
+.btn--call, .btn--connect, .btn--ar, .btn--cancel,
+.btn--accept, .btn, a,
+button, .btn--heart, .btn--close {
   display: inline-block;
   padding: 0;
   border: none;
@@ -219,27 +220,33 @@ button, .btn--heart {
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
   .btn--control, .btn--cam,
   .btn--mic,
-  .btn--call, .btn--connect, .btn--ar, .btn, a,
-  button, .btn--heart, .btn--control:active, .btn--cam:active,
+  .btn--call, .btn--connect, .btn--ar, .btn--cancel,
+  .btn--accept, .btn, a,
+  button, .btn--heart, .btn--close, .btn--control:active, .btn--cam:active,
   .btn--mic:active,
-  .btn--call:active, .btn--connect:active, .btn--ar:active, .btn:active, a:active,
-  button:active, .btn--heart:active, .btn--control:focus, .btn--cam:focus,
+  .btn--call:active, .btn--connect:active, .btn--ar:active, .btn--cancel:active,
+  .btn--accept:active, .btn:active, a:active,
+  button:active, .btn--heart:active, .btn--close:active, .btn--control:focus, .btn--cam:focus,
   .btn--mic:focus,
-  .btn--call:focus, .btn--connect:focus, .btn--ar:focus, .btn:focus, a:focus,
-  button:focus, .btn--heart:focus, .btn--control:hover, .btn--cam:hover,
+  .btn--call:focus, .btn--connect:focus, .btn--ar:focus, .btn--cancel:focus,
+  .btn--accept:focus, .btn:focus, a:focus,
+  button:focus, .btn--heart:focus, .btn--close:focus, .btn--control:hover, .btn--cam:hover,
   .btn--mic:hover,
-  .btn--call:hover, .btn--connect:hover, .btn--ar:hover, .btn:hover, a:hover,
-  button:hover, .btn--heart:hover, .btn--control:visited, .btn--cam:visited,
+  .btn--call:hover, .btn--connect:hover, .btn--ar:hover, .btn--cancel:hover,
+  .btn--accept:hover, .btn:hover, a:hover,
+  button:hover, .btn--heart:hover, .btn--close:hover, .btn--control:visited, .btn--cam:visited,
   .btn--mic:visited,
-  .btn--call:visited, .btn--connect:visited, .btn--ar:visited, .btn:visited, a:visited,
-  button:visited, .btn--heart:visited {
+  .btn--call:visited, .btn--connect:visited, .btn--ar:visited, .btn--cancel:visited,
+  .btn--accept:visited, .btn:visited, a:visited,
+  button:visited, .btn--heart:visited, .btn--close:visited {
     color: inherit;
     text-decoration: none;
     outline: none; }
 
 .btn--control[disabled], .btn--cam[disabled],
 .btn--mic[disabled],
-.btn--call[disabled], .btn--connect[disabled], .btn--ar[disabled], .btn[disabled] {
+.btn--call[disabled], .btn--connect[disabled], .btn--ar[disabled], .btn--cancel[disabled],
+.btn--accept[disabled], .btn[disabled] {
   opacity: 0.5;
   pointer-events: none; }
 
@@ -272,7 +279,8 @@ button, .btn--heart {
     .btn--control svg, .btn--cam svg, .btn--mic svg, .btn--call svg, .btn--control:active svg, .btn--cam:active svg, .btn--mic:active svg, .btn--call:active svg, .btn--control:focus svg, .btn--cam:focus svg, .btn--mic:focus svg, .btn--call:focus svg, .btn--control:hover svg, .btn--cam:hover svg, .btn--mic:hover svg, .btn--call:hover svg, .btn--control:visited svg, .btn--cam:visited svg, .btn--mic:visited svg, .btn--call:visited svg {
       fill: #101010; }
 
-.btn--connect, .btn--ar {
+.btn--connect, .btn--ar, .btn--cancel,
+.btn--accept {
   height: 50px;
   line-height: 50px;
   display: flex;
@@ -281,17 +289,22 @@ button, .btn--heart {
   border-radius: 25px;
   padding: 0 25px;
   font-weight: 900; }
-  .btn--connect svg, .btn--ar svg {
+  .btn--connect svg, .btn--ar svg, .btn--cancel svg, .btn--accept svg {
     width: 24px;
     height: 24px;
     margin-left: -10px;
     margin-right: 10px; }
-  .btn--connect span, .btn--ar span {
+  .btn--connect span, .btn--ar span, .btn--cancel span, .btn--accept span {
     display: block; }
-  .btn--connect, .btn--ar, .btn--connect:active, .btn--ar:active, .btn--connect:focus, .btn--ar:focus, .btn--connect:hover, .btn--ar:hover, .btn--connect:visited, .btn--ar:visited {
+  .btn--connect, .btn--ar, .btn--cancel,
+  .btn--accept, .btn--connect:active, .btn--ar:active, .btn--cancel:active,
+  .btn--accept:active, .btn--connect:focus, .btn--ar:focus, .btn--cancel:focus,
+  .btn--accept:focus, .btn--connect:hover, .btn--ar:hover, .btn--cancel:hover,
+  .btn--accept:hover, .btn--connect:visited, .btn--ar:visited, .btn--cancel:visited,
+  .btn--accept:visited {
     background: #0099ff;
     color: white; }
-    .btn--connect svg, .btn--ar svg, .btn--connect:active svg, .btn--ar:active svg, .btn--connect:focus svg, .btn--ar:focus svg, .btn--connect:hover svg, .btn--ar:hover svg, .btn--connect:visited svg, .btn--ar:visited svg {
+    .btn--connect svg, .btn--ar svg, .btn--cancel svg, .btn--accept svg, .btn--connect:active svg, .btn--ar:active svg, .btn--cancel:active svg, .btn--accept:active svg, .btn--connect:focus svg, .btn--ar:focus svg, .btn--cancel:focus svg, .btn--accept:focus svg, .btn--connect:hover svg, .btn--ar:hover svg, .btn--cancel:hover svg, .btn--accept:hover svg, .btn--connect:visited svg, .btn--ar:visited svg, .btn--cancel:visited svg, .btn--accept:visited svg {
       fill: white; }
 
 .group--form label, .group--form--textarea label, .group--form--select label, .group--form--checkbox label, .group--form--file label, errors-component .inner, .required .required__badge {
@@ -3064,6 +3077,74 @@ errors-component {
   padding: 0;
   margin: 0; }
 
+.modal-outlet__container {
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 20000; }
+  .modal-outlet__container:not(.active) {
+    display: none; }
+
+.modal-outlet__background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3); }
+
+.modal-outlet__modal {
+  position: relative;
+  padding: 0;
+  border-radius: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: white;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 10px 10px -5px; }
+  .modal-outlet__modal::-webkit-scrollbar {
+    width: 6px;
+    border-radius: 3px; }
+  .modal-outlet__modal::-webkit-scrollbar-button {
+    display: none; }
+  .modal-outlet__modal::-webkit-scrollbar-button:hover {
+    display: none; }
+  .modal-outlet__modal::-webkit-scrollbar-thumb {
+    background-color: rgba(22, 37, 91, 0.95);
+    box-shadow: none;
+    border-radius: 3px; }
+    .modal-outlet__modal::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(22, 37, 91, 0.95); }
+  .modal-outlet__modal::-webkit-scrollbar-track {
+    background-color: transparent;
+    border-radius: 3px; }
+    .modal-outlet__modal::-webkit-scrollbar-track:hover {
+      background-color: transparent; }
+  .active .modal-outlet__modal {
+    animation: scale-up-center 400ms cubic-bezier(0.32, 0, 0.29, 0.99) both; }
+  @media (min-width: 768px) {
+    .modal-outlet__modal {
+      max-height: calc(100vh - 200px);
+      max-height: calc(var(--vh, 1vh) * 100 - 200px); } }
+  @media (max-width: 767.98px) {
+    .modal-outlet__modal {
+      width: 100vw;
+      height: 100vh; } }
+
+.modal__header {
+  display: flex;
+  justify-content: flex-end; }
+
+@keyframes scale-up-center {
+  0% {
+    transform: scale(0.75); }
+  100% {
+    transform: scale(1); } }
+
 .dropdown-item:not(.dropped) {
   display: none; }
 
@@ -3419,7 +3500,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  z-index: 1; }
+  z-index: 3; }
   .ui__foot .left,
   .ui__foot .right {
     flex: 0 1 200px; }
@@ -3436,7 +3517,7 @@ body {
   width: 100%;
   height: 100%;
   border: #ff4332 solid 5px;
-  z-index: 100; }
+  z-index: 2; }
 
 .group--controls {
   display: flex;
@@ -3478,6 +3559,7 @@ body {
     width: 80%;
     height: 80%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center; }
 
@@ -3563,6 +3645,37 @@ body {
     transform: translateY(0) rotateX(-360deg);
     transform-origin: 50% 100%; } }
 
+.title {
+  font-weight: 900;
+  font-size: 80px;
+  line-height: 1; }
+
+.abstract {
+  font-size: 40px;
+  line-height: 1; }
+
+.control-request-modal {
+  margin: 0;
+  padding: 0;
+  max-width: 450px;
+  text-align: center; }
+  .control-request-modal .form .title {
+    font-weight: 900;
+    line-height: 1;
+    font-size: 28px; }
+  .control-request-modal .form .group--cta {
+    justify-content: space-around; }
+
+.btn--close {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center; }
+  .btn--close svg {
+    width: 20px;
+    height: 20px; }
+
 /*
 @import '_components/appear';
 @import '_components/background';
@@ -3571,7 +3684,6 @@ body {
 @import '_components/navs';
 @import '_components/swiper';
 @import '_components/media';
-@import '_components/modal';
 @import '_components/cards';
 @import '_components/responsive';
 

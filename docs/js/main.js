@@ -217,7 +217,10 @@
     RequestControlAccepted: 'requestControlAccepted',
     RequestControlRejected: 'requestControlRejected',
     RequestControlDismiss: 'requestControlDismiss',
-    RequestControlDismissed: 'requestControlDismissed'
+    RequestControlDismissed: 'requestControlDismissed',
+    SlideChange: 'slideChange',
+    SlideRotate: 'slideRotate',
+    MenuNavTo: 'menuNavTo'
   };
 
   var AgoraService = /*#__PURE__*/function (_Emittable) {
@@ -248,6 +251,7 @@
       }
 
       _this.state$ = new rxjs.BehaviorSubject(_this.state);
+      _this.message$ = new rxjs.Subject();
       return _this;
     }
 
@@ -294,6 +298,7 @@
       } // console.log('agora rtc sdk version: ' + AgoraRTC.VERSION + ' compatible: ' + AgoraRTC.checkSystemRequirements());
 
 
+      AgoraRTC.Logger.setLogLevel(AgoraRTC.Logger.ERROR);
       var client = this.client = AgoraRTC.createClient({
         mode: 'live',
         codec: 'h264'
@@ -318,8 +323,9 @@
       client.on('onTokenPrivilegeDidExpire', this.onTokenPrivilegeDidExpire); // console.log('agora rtm sdk version: ' + AgoraRTM.VERSION + ' compatible');
 
       var messageClient = this.messageClient = AgoraRTM.createInstance(environment.appKey, {
-        logFilter: AgoraRTM.LOG_FILTER_DEBUG
-      });
+        logFilter: AgoraRTM.LOG_FILTER_ERROR
+      }); // LOG_FILTER_DEBUG
+
       messageClient.on('ConnectionStateChanged', console.error);
       messageClient.on('MessageFromPeer', console.warn);
     };
@@ -649,6 +655,8 @@
         if (message.rpcid) {
           this.emit("message-" + message.rpcid, message);
         }
+
+        this.message$.next(message);
         /*
         // this.emit('wrc-message', message);
         if (message.type === WRCMessageType.WRC_CLOSE) {
@@ -657,7 +665,6 @@
           this.emit('remote-close')
         }
         */
-
       }
     };
 
@@ -882,6 +889,7 @@
   ModalService.modal$ = new rxjs.Subject();
   ModalService.events$ = new rxjs.Subject();
 
+  var CONTROL_REQUEST = BASE_HREF + 'control-request.html';
   var AppComponent = /*#__PURE__*/function (_Component) {
     _inheritsLoose(AppComponent, _Component);
 
@@ -893,6 +901,8 @@
 
     // !!! require localhost or https
     _proto.onInit = function onInit() {
+      var _this = this;
+
       var _getContext = rxcomp.getContext(this),
           node = _getContext.node;
 
@@ -927,6 +937,16 @@
       {
         this.agora = new AgoraService(this.state);
         this.state = this.agora.state;
+        this.agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
+          console.log('message', message);
+
+          switch (message.type) {
+            case MessageType.RequestControl:
+              _this.onRemoteControlRequest(message);
+
+              break;
+          }
+        });
       }
 
       this.loadData();
@@ -939,17 +959,17 @@
     };
 
     _proto.loadData = function loadData() {
-      var _this = this;
+      var _this2 = this;
 
       HttpService.get$(BASE_HREF + 'api/data.json').pipe(operators.first()).subscribe(function (data) {
-        _this.data = data;
+        _this2.data = data;
 
-        _this.initForm();
+        _this2.initForm();
       });
     };
 
     _proto.initForm = function initForm() {
-      var _this2 = this;
+      var _this3 = this;
 
       var data = this.data;
       var form = this.form = new rxcompForm.FormGroup({
@@ -963,31 +983,31 @@
         var product = data.products.find(function (x) {
           return x.id === changes.product;
         });
-        _this2.items = [];
-        _this2.item = null;
+        _this3.items = [];
+        _this3.item = null;
 
-        _this2.pushChanges();
+        _this3.pushChanges();
 
         setTimeout(function () {
-          _this2.items = product ? product.items : [];
-          _this2.item = product;
+          _this3.items = product ? product.items : [];
+          _this3.item = product;
 
-          _this2.pushChanges();
+          _this3.pushChanges();
         }, 1);
       });
     };
 
     _proto.connect = function connect() {
-      var _this3 = this;
+      var _this4 = this;
 
       if (!this.state.connecting) {
         this.state.connecting = true;
         this.pushChanges();
         setTimeout(function () {
-          _this3.agora.connect$().pipe(operators.takeUntil(_this3.unsubscribe$)).subscribe(function (state) {
-            _this3.state = Object.assign(_this3.state, state);
+          _this4.agora.connect$().pipe(operators.takeUntil(_this4.unsubscribe$)).subscribe(function (state) {
+            _this4.state = Object.assign(_this4.state, state);
 
-            _this3.pushChanges();
+            _this4.pushChanges();
           });
         }, 1000);
       }
@@ -995,7 +1015,54 @@
 
     _proto.disconnect = function disconnect() {
       this.state.connecting = false;
-      this.agora.leaveChannel();
+
+      if (this.agora) {
+        this.agora.leaveChannel();
+      } else {
+        this.state.connected = false;
+        this.pushChanges();
+      }
+    };
+
+    _proto.onChange = function onChange(index) {
+      if (this.agora && this.state.control) {
+        this.agora.sendMessage({
+          type: MessageType.SlideChange,
+          index: index
+        });
+      }
+    };
+
+    _proto.onRotate = function onRotate(coords) {
+      if (this.agora && this.state.control) {
+        this.agora.sendMessage({
+          type: MessageType.SlideRotate,
+          coords: coords
+        });
+      }
+    };
+
+    _proto.onRemoteControlRequest = function onRemoteControlRequest(message) {
+      var _this5 = this;
+
+      ModalService.open$({
+        src: CONTROL_REQUEST,
+        data: null
+      }).pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (event) {
+        if (event instanceof ModalResolveEvent) {
+          message.type = MessageType.RequestControlAccepted;
+          _this5.state.locked = true;
+        } else {
+          message.type = MessageType.RequestControlRejected;
+          _this5.state.locked = false;
+        }
+
+        if (_this5.agora) {
+          _this5.agora.sendMessage(message);
+        }
+
+        _this5.pushChanges();
+      });
     };
 
     _proto.onDropped = function onDropped(id) {
@@ -1014,32 +1081,6 @@
           this.openRegister();
           break;
       }
-    };
-
-    _proto.openLogin = function openLogin() {
-      this.openLoginRegisterModal(1);
-    };
-
-    _proto.openRegister = function openRegister() {
-      this.openLoginRegisterModal(2);
-    };
-
-    _proto.openLoginRegisterModal = function openLoginRegisterModal(view) {
-      if (view === void 0) {
-        view = 1;
-      }
-
-      ModalService.open$({
-        src: src,
-        data: {
-          view: view
-        }
-      }).pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (event) {
-        // console.log('RegisterOrLoginComponent.onRegister', event);
-        if (event instanceof ModalResolveEvent) {
-          UserService.setUser(event.data);
-        }
-      });
     } // onView() { const context = getContext(this); }
     // onChanges() {}
     // onDestroy() {}
@@ -1058,8 +1099,10 @@
     };
 
     _proto.toggleControl = function toggleControl() {
-      if (this.agora) {
-        this.agora.toggleControl();
+      {
+        if (this.agora) {
+          this.agora.toggleControl();
+        }
       }
     };
 
@@ -1075,6 +1118,120 @@
   }(rxcomp.Component);
   AppComponent.meta = {
     selector: '[app-component]'
+  };
+
+  var ModalOutletComponent = /*#__PURE__*/function (_Component) {
+    _inheritsLoose(ModalOutletComponent, _Component);
+
+    function ModalOutletComponent() {
+      return _Component.apply(this, arguments) || this;
+    }
+
+    var _proto = ModalOutletComponent.prototype;
+
+    _proto.onInit = function onInit() {
+      var _this = this;
+
+      var _getContext = rxcomp.getContext(this),
+          node = _getContext.node;
+
+      this.modalNode = node.querySelector('.modal-outlet__modal');
+      ModalService.modal$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (modal) {
+        _this.modal = modal;
+      });
+    };
+
+    _proto.onRegister = function onRegister(event) {
+      // console.log('ModalComponent.onRegister');
+      this.pushChanges();
+    };
+
+    _proto.onLogin = function onLogin(event) {
+      // console.log('ModalComponent.onLogin');
+      this.pushChanges();
+    };
+
+    _proto.reject = function reject(event) {
+      ModalService.reject();
+    };
+
+    _createClass(ModalOutletComponent, [{
+      key: "modal",
+      get: function get() {
+        return this.modal_;
+      },
+      set: function set(modal) {
+        // console.log('ModalOutletComponent set modal', modal, this);
+        var _getContext2 = rxcomp.getContext(this),
+            module = _getContext2.module;
+
+        if (this.modal_ && this.modal_.node) {
+          module.remove(this.modal_.node, this);
+          this.modalNode.removeChild(this.modal_.node);
+        }
+
+        if (modal && modal.node) {
+          this.modal_ = modal;
+          this.modalNode.appendChild(modal.node);
+          var instances = module.compile(modal.node);
+        }
+
+        this.modal_ = modal;
+        this.pushChanges();
+      }
+    }]);
+
+    return ModalOutletComponent;
+  }(rxcomp.Component);
+  ModalOutletComponent.meta = {
+    selector: '[modal-outlet]',
+    template:
+    /* html */
+    "\n\t<div class=\"modal-outlet__container\" [class]=\"{ active: modal }\">\n\t\t<div class=\"modal-outlet__background\" (click)=\"reject($event)\"></div>\n\t\t<div class=\"modal-outlet__modal\"></div>\n\t</div>\n\t"
+  };
+
+  var ControlRequestComponent = /*#__PURE__*/function (_Component) {
+    _inheritsLoose(ControlRequestComponent, _Component);
+
+    function ControlRequestComponent() {
+      return _Component.apply(this, arguments) || this;
+    }
+
+    var _proto = ControlRequestComponent.prototype;
+
+    _proto.onInit = function onInit() {
+      _Component.prototype.onInit.call(this);
+
+      var _getContext = rxcomp.getContext(this),
+          parentInstance = _getContext.parentInstance;
+
+      if (parentInstance instanceof ModalOutletComponent) {
+        this.data = parentInstance.modal.data;
+      }
+    };
+
+    _proto.onAccept = function onAccept(user) {
+      ModalService.resolve();
+    };
+
+    _proto.onReject = function onReject(user) {
+      ModalService.reject();
+    }
+    /*
+    onDestroy() {
+    	// console.log('ControlRequestComponent.onDestroy');
+    }
+    */
+    ;
+
+    _proto.close = function close() {
+      ModalService.reject();
+    };
+
+    return ControlRequestComponent;
+  }(rxcomp.Component);
+  ControlRequestComponent.meta = {
+    selector: '[control-request]'
   };
 
   var DROPDOWN_ID = 1000000;
@@ -1468,6 +1625,34 @@
 
     /*  <!-- <div class="dropdown" [class]="{ dropped: dropped }"> --> */
 
+  };
+
+  var ModalComponent = /*#__PURE__*/function (_Component) {
+    _inheritsLoose(ModalComponent, _Component);
+
+    function ModalComponent() {
+      return _Component.apply(this, arguments) || this;
+    }
+
+    var _proto = ModalComponent.prototype;
+
+    _proto.onInit = function onInit() {
+      var _getContext = rxcomp.getContext(this),
+          parentInstance = _getContext.parentInstance;
+
+      if (parentInstance instanceof ModalOutletComponent) {
+        this.data = parentInstance.modal.data;
+      }
+    };
+
+    _proto.close = function close() {
+      ModalService.reject();
+    };
+
+    return ModalComponent;
+  }(rxcomp.Component);
+  ModalComponent.meta = {
+    selector: '[modal]'
   };
 
   // Polyfills
@@ -54982,8 +55167,7 @@ void main() {
     _proto.onInit = function onInit() {
       console.log('ModelViewerComponent.onInit');
       this.items = [];
-      this.createScene(); // this.loadAssets();
-
+      this.createScene();
       this.addListeners(); // this.animate(); // !!! no
     } // onView() { const context = getContext(this); }
     // onChanges() {}
@@ -55057,12 +55241,16 @@ void main() {
 
       var rotation;
       return DragService.events$(this.node).pipe(operators.tap(function (event) {
+        var group = _this.objects.children[_this.index];
+
         if (event instanceof DragDownEvent) {
-          rotation = _this.objects.children[_this.index].rotation.clone();
+          rotation = group.rotation.clone();
         } else if (event instanceof DragMoveEvent) {
-          _this.objects.children[_this.index].rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01, 0);
+          group.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01, 0);
 
           _this.render();
+
+          _this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
         }
       }));
     };
@@ -55073,6 +55261,7 @@ void main() {
 
     _proto.onChange = function onChange(index) {
       this.index = index;
+      this.change.next(index);
     };
 
     _proto.updateRaycaster = function updateRaycaster() {
@@ -55189,7 +55378,8 @@ void main() {
   }(rxcomp.Component);
   ModelViewerComponent.meta = {
     selector: '[model-viewer]',
-    inputs: ['items']
+    inputs: ['items'],
+    outputs: ['change', 'rotate']
   };
 
   var deg = THREE.Math.degToRad;
@@ -55672,8 +55862,6 @@ void main() {
   import LazyDirective from './lazy/lazy.directive';
   import MainMenuComponent from './main-menu/main-menu.component';
   import MediaLibraryComponent from './media-library/media-library';
-  import ModalOutletComponent from './modal/modal-outlet.component';
-  import ModalComponent from './modal/modal.component';
   import NaturalFormContactComponent from './natural-form/natural-form-contact.component';
   import NaturalFormControlComponent from './natural-form/natural-form-control.component';
   import NaturalFormNewsletterComponent from './natural-form/natural-form-newsletter.component';
@@ -55708,7 +55896,7 @@ void main() {
   }(rxcomp.Module);
   AppModule.meta = {
     imports: [rxcomp.CoreModule, rxcompForm.FormModule],
-    declarations: [ModelComponent, ModelGltfComponent, ModelTextComponent, ModelPictureComponent, ModelViewerComponent, ControlCustomSelectComponent, DropdownDirective, DropdownItemDirective, SliderDirective
+    declarations: [ControlCustomSelectComponent, ControlRequestComponent, DropdownDirective, DropdownItemDirective, ModalComponent, ModalOutletComponent, ModelComponent, ModelGltfComponent, ModelPictureComponent, ModelTextComponent, ModelViewerComponent, SliderDirective
     /*
     AgentsComponent,
     AppearDirective,
@@ -55736,8 +55924,6 @@ void main() {
     LazyDirective,
     MainMenuComponent,
     MediaLibraryComponent,
-    ModalOutletComponent,
-    ModalComponent,
     PriceListComponent,
     NaturalFormComponent,
     NaturalFormSearchComponent,

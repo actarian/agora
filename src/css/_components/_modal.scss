@@ -27,7 +27,8 @@
 	&__modal {
 		position: relative;
 		// max-width: 700px;
-		padding: 0 0 30px 0;
+		padding: 0;
+		border-radius: 12px;
 		overflow-x: hidden;
 		overflow-y: auto;
 		@include scrollbar();
@@ -54,7 +55,6 @@
 .modal__header {
 	display: flex;
 	justify-content: flex-end;
-	margin-bottom: 30px;
 }
 
 @keyframes scale-up-center {

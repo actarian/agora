@@ -11,7 +11,6 @@ export class ModelViewerComponent extends Component {
 		console.log('ModelViewerComponent.onInit');
 		this.items = [];
 		this.createScene();
-		// this.loadAssets();
 		this.addListeners();
 		// this.animate(); // !!! no
 	}
@@ -89,11 +88,13 @@ export class ModelViewerComponent extends Component {
 		let rotation;
 		return DragService.events$(this.node).pipe(
 			tap((event) => {
+				const group = this.objects.children[this.index];
 				if (event instanceof DragDownEvent) {
-					rotation = this.objects.children[this.index].rotation.clone();
+					rotation = group.rotation.clone();
 				} else if (event instanceof DragMoveEvent) {
-					this.objects.children[this.index].rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01, 0);
+					group.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01, 0);
 					this.render();
+					this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
 				} else if (event instanceof DragUpEvent) {
 
 				}
@@ -107,6 +108,7 @@ export class ModelViewerComponent extends Component {
 
 	onChange(index) {
 		this.index = index;
+		this.change.next(index);
 	}
 
 	updateRaycaster() {
@@ -233,4 +235,5 @@ export class ModelViewerComponent extends Component {
 ModelViewerComponent.meta = {
 	selector: '[model-viewer]',
 	inputs: ['items'],
+	outputs: ['change', 'rotate'],
 };

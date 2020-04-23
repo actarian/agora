@@ -2,11 +2,15 @@ import { Component, getContext } from 'rxcomp';
 // import UserService from './user/user.service';
 import { FormControl, FormGroup, Validators } from 'rxcomp-form';
 import { first, takeUntil } from 'rxjs/operators';
-import AgoraService, { RoleType } from './agora/agora.service';
+import AgoraService, { MessageType, RoleType } from './agora/agora.service';
 import { BASE_HREF } from './const';
 import HttpService from './http/http.service';
 import LocationService from './location/location.service';
 import ModalService, { ModalResolveEvent } from './modal/modal.service';
+
+const CONTROL_REQUEST = BASE_HREF + 'control-request.html';
+
+const DEBUG = false;
 
 export class AppComponent extends Component {
 
@@ -40,11 +44,21 @@ export class AppComponent extends Component {
 			cameraMuted: false,
 			audioMuted: false,
 		};
-		if (false) {
+		if (DEBUG) {
 			this.state.connected = true;
 		} else {
 			this.agora = new AgoraService(this.state);
 			this.state = this.agora.state;
+			this.agora.message$.pipe(
+				takeUntil(this.unsubscribe$)
+			).subscribe(message => {
+				console.log('message', message);
+				switch (message.type) {
+					case MessageType.RequestControl:
+						this.onRemoteControlRequest(message);
+						break;
+				}
+			});
 		}
 		this.loadData();
 	}
@@ -108,7 +122,48 @@ export class AppComponent extends Component {
 
 	disconnect() {
 		this.state.connecting = false;
-		this.agora.leaveChannel();
+		if (this.agora) {
+			this.agora.leaveChannel();
+		} else {
+			this.state.connected = false;
+			this.pushChanges();
+		}
+	}
+
+	onChange(index) {
+		if (this.agora && this.state.control) {
+			this.agora.sendMessage({
+				type: MessageType.SlideChange,
+				index
+			});
+		}
+	}
+
+	onRotate(coords) {
+		if (this.agora && this.state.control) {
+			this.agora.sendMessage({
+				type: MessageType.SlideRotate,
+				coords
+			});
+		}
+	}
+
+	onRemoteControlRequest(message) {
+		ModalService.open$({ src: CONTROL_REQUEST, data: null }).pipe(
+			takeUntil(this.unsubscribe$)
+		).subscribe(event => {
+			if (event instanceof ModalResolveEvent) {
+				message.type = MessageType.RequestControlAccepted;
+				this.state.locked = true;
+			} else {
+				message.type = MessageType.RequestControlRejected;
+				this.state.locked = false;
+			}
+			if (this.agora) {
+				this.agora.sendMessage(message);
+			}
+			this.pushChanges();
+		});
 	}
 
 	onDropped(id) {
@@ -125,25 +180,6 @@ export class AppComponent extends Component {
 				this.openRegister();
 				break;
 		}
-	}
-
-	openLogin() {
-		this.openLoginRegisterModal(1);
-	}
-
-	openRegister() {
-		this.openLoginRegisterModal(2);
-	}
-
-	openLoginRegisterModal(view = 1) {
-		ModalService.open$({ src: src, data: { view } }).pipe(
-			takeUntil(this.unsubscribe$)
-		).subscribe(event => {
-			// console.log('RegisterOrLoginComponent.onRegister', event);
-			if (event instanceof ModalResolveEvent) {
-				UserService.setUser(event.data);
-			}
-		});
 	}
 
 	// onView() { const context = getContext(this); }
@@ -165,8 +201,12 @@ export class AppComponent extends Component {
 	}
 
 	toggleControl() {
-		if (this.agora) {
-			this.agora.toggleControl();
+		if (DEBUG) {
+			this.onRemoteControlRequest({});
+		} else {
+			if (this.agora) {
+				this.agora.toggleControl();
+			}
 		}
 	}
 

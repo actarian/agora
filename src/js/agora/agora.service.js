@@ -2,7 +2,7 @@
 // const AgoraRTC = require('agora-rtc-sdk');
 
 import AgoraRTM from 'agora-rtm-sdk';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, of , Subject } from 'rxjs';
 import { environment } from '../../environment/environment';
 import Emittable from '../emittable/emittable';
 import HttpService from '../http/http.service';
@@ -18,7 +18,10 @@ export const MessageType = {
 	RequestControlAccepted: 'requestControlAccepted',
 	RequestControlRejected: 'requestControlRejected',
 	RequestControlDismiss: 'requestControlDismiss',
-	RequestControlDismissed: 'requestControlDismissed'
+	RequestControlDismissed: 'requestControlDismissed',
+	SlideChange: 'slideChange',
+	SlideRotate: 'slideRotate',
+	MenuNavTo: 'menuNavTo',
 };
 
 export default class AgoraService extends Emittable {
@@ -44,6 +47,7 @@ export default class AgoraService extends Emittable {
 			this.state = Object.assign(this.state, state);
 		}
 		this.state$ = new BehaviorSubject(this.state);
+		this.message$ = new Subject();
 	}
 
 	setState(state) {
@@ -82,6 +86,7 @@ export default class AgoraService extends Emittable {
 			next();
 		}
 		// console.log('agora rtc sdk version: ' + AgoraRTC.VERSION + ' compatible: ' + AgoraRTC.checkSystemRequirements());
+		AgoraRTC.Logger.setLogLevel(AgoraRTC.Logger.ERROR);
 		const client = this.client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' }); // rtc
 		client.init(environment.appKey, () => {
 			// console.log('AgoraRTC client initialized');
@@ -101,7 +106,7 @@ export default class AgoraService extends Emittable {
 		client.on('onTokenPrivilegeWillExpire', this.onTokenPrivilegeWillExpire);
 		client.on('onTokenPrivilegeDidExpire', this.onTokenPrivilegeDidExpire);
 		// console.log('agora rtm sdk version: ' + AgoraRTM.VERSION + ' compatible');
-		const messageClient = this.messageClient = AgoraRTM.createInstance(environment.appKey, { logFilter: AgoraRTM.LOG_FILTER_DEBUG });
+		const messageClient = this.messageClient = AgoraRTM.createInstance(environment.appKey, { logFilter: AgoraRTM.LOG_FILTER_ERROR }); // LOG_FILTER_DEBUG
 		messageClient.on('ConnectionStateChanged', console.error);
 		messageClient.on('MessageFromPeer', console.warn);
 	}
@@ -388,6 +393,7 @@ export default class AgoraService extends Emittable {
 			if (message.rpcid) {
 				this.emit(`message-${message.rpcid}`, message);
 			}
+			this.message$.next(message);
 			/*
 			// this.emit('wrc-message', message);
 			if (message.type === WRCMessageType.WRC_CLOSE) {

@@ -1,9 +1,12 @@
 import { CoreModule, Module } from 'rxcomp';
 import { FormModule } from 'rxcomp-form';
 import { AppComponent } from './app.component';
+import ControlRequestComponent from './control-request/control-request.component';
 import DropdownItemDirective from './dropdown/dropdown-item.directive';
 import DropdownDirective from './dropdown/dropdown.directive';
 import ControlCustomSelectComponent from './forms/control-custom-select.component';
+import ModalOutletComponent from './modal/modal-outlet.component';
+import ModalComponent from './modal/modal.component';
 import { ModelGltfComponent } from './model-viewer/model-gltf.component';
 import { ModelPictureComponent } from './model-viewer/model-picture.component';
 import { ModelTextComponent } from './model-viewer/model-text.component';
@@ -38,8 +41,6 @@ import HtmlPipe from './html/html.pipe';
 import LazyDirective from './lazy/lazy.directive';
 import MainMenuComponent from './main-menu/main-menu.component';
 import MediaLibraryComponent from './media-library/media-library';
-import ModalOutletComponent from './modal/modal-outlet.component';
-import ModalComponent from './modal/modal.component';
 import NaturalFormContactComponent from './natural-form/natural-form-contact.component';
 import NaturalFormControlComponent from './natural-form/natural-form-control.component';
 import NaturalFormNewsletterComponent from './natural-form/natural-form-newsletter.component';
@@ -71,14 +72,17 @@ AppModule.meta = {
 		FormModule,
 	],
 	declarations: [
-		ModelComponent,
-		ModelGltfComponent,
-		ModelTextComponent,
-		ModelPictureComponent,
-		ModelViewerComponent,
 		ControlCustomSelectComponent,
+		ControlRequestComponent,
 		DropdownDirective,
 		DropdownItemDirective,
+		ModalComponent,
+		ModalOutletComponent,
+		ModelComponent,
+		ModelGltfComponent,
+		ModelPictureComponent,
+		ModelTextComponent,
+		ModelViewerComponent,
 		SliderDirective,
 		/*
 		AgentsComponent,
@@ -107,8 +111,6 @@ AppModule.meta = {
 		LazyDirective,
 		MainMenuComponent,
 		MediaLibraryComponent,
-		ModalOutletComponent,
-		ModalComponent,
 		PriceListComponent,
 		NaturalFormComponent,
 		NaturalFormSearchComponent,
