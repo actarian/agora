@@ -1,7 +1,8 @@
 // import { DragDownEvent, DragEvent, DragMoveEvent, DragService, DragUpEvent } from '../../shared/drag/drag.service';
 import { Component, getContext } from 'rxcomp';
-// import { takeUntil, tap } from 'rxjs/operators';
-import { tap } from 'rxjs/operators';
+import { takeUntil, tap } from 'rxjs/operators';
+import AgoraService, { MessageType } from '../agora/agora.service';
+import { DEBUG } from '../const';
 import { DragDownEvent, DragMoveEvent, DragService, DragUpEvent } from '../drag/drag.service';
 
 export class SliderDirective extends Component {
@@ -26,6 +27,18 @@ export class SliderDirective extends Component {
 		gsap.set(this.inner, {
 			x: -100 * this.current + '%',
 		});
+		if (!DEBUG) {
+			const agora = AgoraService.getSingleton();
+			agora.message$.pipe(
+				takeUntil(this.unsubscribe$)
+			).subscribe(message => {
+				switch (message.type) {
+					case MessageType.SlideChange:
+						console.log(message);
+						break;
+				}
+			});
+		}
 		/*
 		this.slider$().pipe(
 			takeUntil(this.unsubscribe$),
@@ -76,7 +89,7 @@ export class SliderDirective extends Component {
 	}
 
 	tweenTo(index, callback) {
-		console.log('tweenTo', index);
+		// console.log('tweenTo', index);
 		const container = this.container;
 		const inner = this.inner;
 		const width = this.container.offsetWidth;

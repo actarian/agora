@@ -15,6 +15,7 @@ export class RgbeLoader {
 		const loader = new RGBELoader();
 		loader
 			.setDataType(THREE.UnsignedByteType)
+			// .setDataType(THREE.FloatType)
 			.setPath(path)
 			.load(file, (texture) => {
 				const envMap = pmremGenerator.fromEquirectangular(texture).texture;

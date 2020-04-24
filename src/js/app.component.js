@@ -3,35 +3,19 @@ import { Component, getContext } from 'rxcomp';
 import { FormControl, FormGroup, Validators } from 'rxcomp-form';
 import { first, takeUntil } from 'rxjs/operators';
 import AgoraService, { MessageType, RoleType } from './agora/agora.service';
-import { BASE_HREF } from './const';
+import { BASE_HREF, DEBUG } from './const';
 import HttpService from './http/http.service';
 import LocationService from './location/location.service';
 import ModalService, { ModalResolveEvent } from './modal/modal.service';
 
 const CONTROL_REQUEST = BASE_HREF + 'control-request.html';
-
-const DEBUG = true;
+const TRY_IN_AR = BASE_HREF + 'try-in-ar.html';
 
 export class AppComponent extends Component {
-
-	// !!! require localhost or https
 
 	onInit() {
 		const { node } = getContext(this);
 		node.classList.remove('hidden');
-		// console.log('context', context);
-		/*
-		UserService.user$.pipe(
-			takeUntil(this.unsubscribe$)
-		).subscribe(user => {
-			console.log('AppComponent.user$', user);
-			this.user = user;
-			this.pushChanges();
-		});
-		setTimeout(() => {
-			this.parseQueryString();
-		}, 500);
-		*/
 		this.items = [];
 		this.item = null;
 		this.form = null;
@@ -45,7 +29,7 @@ export class AppComponent extends Component {
 			audioMuted: false,
 		};
 		if (!DEBUG) {
-			this.agora = new AgoraService(this.state);
+			this.agora = AgoraService.getSingleton(this.state);
 			this.state = this.agora.state;
 			this.agora.message$.pipe(
 				takeUntil(this.unsubscribe$)
@@ -66,7 +50,6 @@ export class AppComponent extends Component {
 	onPrevent(event) {
 		event.preventDefault();
 		event.stopImmediatePropagation();
-		console.log('onPrevent');
 	}
 
 	loadData() {
@@ -89,7 +72,6 @@ export class AppComponent extends Component {
 			takeUntil(this.unsubscribe$)
 		).subscribe((changes) => {
 			// console.log('form.changes$', changes, form.valid);
-			console.log(changes.product);
 			const product = data.products.find(x => x.id === changes.product);
 			this.items = [];
 			this.item = null;
@@ -211,6 +193,14 @@ export class AppComponent extends Component {
 			this.item.likes++;
 			this.pushChanges();
 		}
+	}
+
+	tryInAr() {
+		ModalService.open$({ src: TRY_IN_AR, data: this.item }).pipe(
+			takeUntil(this.unsubscribe$)
+		).subscribe(event => {
+			// this.pushChanges();
+		});
 	}
 
 }

@@ -1,24 +1,76 @@
 import { Component, getContext } from 'rxcomp';
 import { takeUntil, tap } from 'rxjs/operators';
 import * as THREE from 'three';
+import AgoraService, { MessageType } from '../agora/agora.service';
+import { DEBUG } from '../const';
 import { DragDownEvent, DragMoveEvent, DragService, DragUpEvent } from '../drag/drag.service';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Rect } from '../rect/rect';
 import { RgbeLoader } from './rgbe.loader';
+
+const VERTEX_SHADER = `
+varying vec2 vUv;
+void main() {
+	vUv = uv;
+	// gl_PointSize = 8.0;
+	gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const FRAGMENT_SHADER = `
+varying vec2 vUv;
+uniform vec2 resolution;
+uniform sampler2D texture;
+
+vec3 ACESFilmicToneMapping_( vec3 color ) {
+	color *= 1.8;
+	return saturate( ( color * ( 2.51 * color + 0.03 ) ) / ( color * ( 2.43 * color + 0.59 ) + 0.14 ) );
+}
+
+vec4 getColor(vec2 p) {
+	return texture2D(texture, p);
+}
+
+vec3 encodeColor(vec4 color) {
+	return ACESFilmicToneMapping_(RGBEToLinear(color).rgb);
+}
+
+float rand(vec2 co){
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+vec4 Blur(vec2 st, vec4 color) {
+	const float directions = 16.0;
+	const float quality = 3.0;
+	float size = 16.0;
+	const float PI2 = 6.28318530718;
+	const float qq = 1.0;
+	const float q = 1.0 / quality;
+	vec2 radius = size / resolution.xy;
+	for (float d = 0.0; d < PI2; d += PI2 / directions) {
+		for (float i = q; i <= qq; i += q) {
+			vec2 dUv = vec2(cos(d), sin(d)) * radius * i;
+			color += getColor(st + dUv);
+        }
+	}
+	return color /= quality * directions - 15.0 + rand(st) * 4.0;
+}
+
+void main() {
+	vec4 color = getColor(vUv);
+	// color = Blur(vUv, color);
+	color = vec4(encodeColor(color) + rand(vUv) * 0.1, 1.0);
+	gl_FragColor = color;
+}
+`;
 
 export class ModelViewerComponent extends Component {
 
 	set item(item) {
 		if (this.item_ !== item) {
 			this.item_ = item;
-			if (item) {
-				RgbeLoader.load(item, this.renderer, (envMap, texture) => {
-					// this.scene.background = envMap;
-					this.scene.environment = envMap;
-					this.panorama.material.map = texture;
-					this.panorama.material.needsUpdate = true;
-					this.render();
-				});
+			if (item && this.renderer) {
+				this.loadRgbe(item);
 			}
 		}
 	}
@@ -28,12 +80,14 @@ export class ModelViewerComponent extends Component {
 	}
 
 	onInit() {
-		console.log('ModelViewerComponent.onInit');
-		this.item_ = null;
+		// console.log('ModelViewerComponent.onInit');
 		this.items = [];
 		this.index = 0;
 		this.createScene();
 		this.addListeners();
+		if (this.item) {
+			this.loadRgbe(this.item);
+		}
 		// this.animate(); // !!! no
 	}
 
@@ -45,6 +99,22 @@ export class ModelViewerComponent extends Component {
 		this.removeListeners();
 		const renderer = this.renderer;
 		renderer.setAnimationLoop(() => {});
+	}
+
+	loadRgbe(item) {
+		RgbeLoader.load(item, this.renderer, (envMap, texture) => {
+			// this.scene.background = envMap;
+			this.scene.environment = envMap;
+			texture.magFilter = THREE.LinearFilter;
+			texture.needsUpdate = true;
+			this.panorama.material.map = texture;
+			this.panorama.material.uniforms.texture.value = texture;
+			this.panorama.material.uniforms.resolution.value = new THREE.Vector2(texture.width, texture.height);
+			// console.log(texture.width, texture.height);
+			this.panorama.material.needsUpdate = true;
+			this.render();
+			// console.log(this.panorama.material);
+		});
 	}
 
 	createScene() {
@@ -96,7 +166,15 @@ export class ModelViewerComponent extends Component {
 		const geometry = new THREE.SphereBufferGeometry(500, 60, 40);
 		// invert the geometry on the x-axis so that all of the faces point inward
 		geometry.scale(-1, 1, 1);
-		const material = new THREE.MeshBasicMaterial();
+		// const material = new THREE.MeshBasicMaterial();
+		const material = new THREE.ShaderMaterial({
+			vertexShader: VERTEX_SHADER,
+			fragmentShader: FRAGMENT_SHADER,
+			uniforms: {
+				texture: { type: "t", value: null },
+				resolution: { value: new THREE.Vector2() }
+			},
+		});
 		const panorama = this.panorama = new THREE.Mesh(geometry, material);
 		scene.add(panorama);
 
@@ -218,6 +296,18 @@ export class ModelViewerComponent extends Component {
 		this.render = this.render.bind(this);
 		// this.controls.addEventListener('change', this.render); // use if there is no animation loop
 		window.addEventListener('resize', this.resize, false);
+		if (!DEBUG) {
+			const agora = AgoraService.getSingleton();
+			agora.message$.pipe(
+				takeUntil(this.unsubscribe$)
+			).subscribe(message => {
+				switch (message.type) {
+					case MessageType.SlideRotate:
+						console.log(message);
+						break;
+				}
+			});
+		}
 	}
 
 	removeListeners() {
@@ -245,7 +335,7 @@ export class ModelViewerComponent extends Component {
 		const tx = rect.x * cameraRect.width / worldRect.width - cameraRect.width / 2;
 		const ty = rect.y * cameraRect.height / worldRect.height - cameraRect.height / 2;
 		object.position.set(tx, -ty, 0);
-		console.log(tx);
+		// console.log(tx);
 	}
 
 	repos(object, rect) {

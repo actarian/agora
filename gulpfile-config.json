@@ -56,7 +56,8 @@
             "node_modules/rxcomp-form/dist/iife/rxcomp-form.js",
             "node_modules/gsap/dist/EasePack.js",
             "node_modules/gsap/dist/gsap.js",
-            "node_modules/three/build/three.js"
+            "node_modules/three/build/three.js",
+            "node_modules/qrious/dist/qrious.js"
           ],
           "output": "docs/js/vendors.js",
           "minify": true

@@ -15,17 +15,19 @@
 <div class="ui" *if="state.connected">
 
 	<div class="ui__head">
-		<div class="video video--other"></div>
+		<div class="group--remote">
+			<div class="video video--remote" [class]="{ disabled: !state.remote }"></div>
+		</div>
 		<div class="group--select" *if="form">
 			<form class="form" [formGroup]="form" (submit)="onSubmit()" name="form" role="form" novalidate autocomplete="off">
 				<div control-custom-select [control]="controls.product" label="Prodotto"></div>
 			</form>
 		</div>
-		<div class="group--me" [class]="{ publisher: state.role == 'publisher' }">
+		<div class="group--local" [class]="{ publisher: state.role == 'publisher' }">
 			<button type="button" class="btn--control" [class]="{ active: state.control }" (click)="toggleControl($event)" *if="state.role == 'publisher'">
 				<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#gamepad"></use></svg>
 			</button>
-			<div class="video video--me"></div>
+			<div class="video video--local" [class]="{ disabled: !state.local }"></div>
 		</div>
 	</div>
 
@@ -76,18 +78,18 @@
 				<button type="button" class="btn--call" (click)="disconnect()">
 					<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#call"></use></svg>
 				</button>
-				<button type="button" class="btn--cam" [class]="{ active: state.cameraMuted }" (click)="toggleCamera()">
+				<button type="button" class="btn--cam" [class]="{ muted: state.cameraMuted, disabled: !state.local }" (click)="toggleCamera()">
 					<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#cam"></use></svg>
 				</button>
-				<button type="button" class="btn--mic" [class]="{ active: state.audioMuted }" (click)="toggleAudio()">
+				<button type="button" class="btn--mic" [class]="{ muted: state.audioMuted, disabled: !state.local }" (click)="toggleAudio()">
 					<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#mic"></use></svg>
 				</button>
 			</div>
 		</div>
 		<div class="center">
-			<a class="btn--ar" [href]="item?.ar" download *if="item?.ar">
+			<button type="button" class="btn--ar" [href]="item?.ar" (click)="tryInAr()" *if="item?.ar">
 				<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#ar"></use></svg> <span>Try in AR</span>
-			</a>
+			</button>
 			<!-- <span *if="!item?.ar">&nbsp;</span> -->
 		</div>
 		<div class="right">

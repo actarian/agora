@@ -13,6 +13,7 @@ import { ModelTextComponent } from './model-viewer/model-text.component';
 import { ModelViewerComponent } from './model-viewer/model-viewer.component';
 import { ModelComponent } from './model-viewer/model.component';
 import { SliderDirective } from './slider/slider.directive';
+import TryInARComponent from './try-in-ar/try-in-ar';
 
 /*
 import AgentsComponent from './agents/agents.component';
@@ -84,6 +85,7 @@ AppModule.meta = {
 		ModelTextComponent,
 		ModelViewerComponent,
 		SliderDirective,
+		TryInARComponent,
 		/*
 		AgentsComponent,
 		AppearDirective,

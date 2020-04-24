@@ -154,7 +154,13 @@ body {
 .video {
 	border-radius: 12px;
 	overflow: hidden;
-	background: white;
+	// background: white;
+	background: transparent;
+	border: 2px solid rgba(0, 153, 255, 0.4);
+
+	&.playing {
+		border-color: transparent;
+	}
 }
 
 @mixin ratio($width, $ratio) {
@@ -162,21 +168,21 @@ body {
 	height: $width / $ratio;
 }
 
-.video--me {
+.video--local {
 	@include ratio(120px, 4 / 3);
 	margin-left: 200px;
 }
 
-.video--other {
+.video--remote {
 	@include ratio(320px, 4 / 3);
 }
 
-.group--me {
+.group--local {
 	display: flex;
 	align-items: center;
 
 	&.publisher {
-		.video--me {
+		.video--local {
 			margin-left: 20px;
 		}
 	}
@@ -282,6 +288,21 @@ body {
 
 }
 
+.btn--cam,
+.btn--mic {
+	&.disabled {
+		opacity: 0.2;
+		pointer-events: none;
+	}
+}
+
+.video--local,
+.video--remote {
+	&.disabled {
+		display: none;
+	}
+}
+
 .btn--ar {
 	@extend %btn-rect;
 }
@@ -309,7 +330,8 @@ body {
 	line-height: 1;
 }
 
-.control-request-modal {
+.control-request-modal,
+.try-in-ar-modal {
 	margin: 0;
 	padding: 0;
 	max-width: 450px;
@@ -325,6 +347,18 @@ body {
 		.group--cta {
 			justify-content: space-around;
 		}
+	}
+}
+
+.try-in-ar-modal {
+	.picture {
+		display: flex;
+		justify-content: center;
+	}
+
+	.qrcode {
+		width: 256px;
+		height: 256px;
 	}
 }
 

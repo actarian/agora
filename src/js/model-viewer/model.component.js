@@ -11,8 +11,8 @@ const GEOMETRY = new THREE.BoxGeometry(1, 1, 1);
 export class ModelComponent extends Component {
 
 	onInit() {
-		console.log('ModelComponent.onInit');
-		console.log('item', this.item, 'host', this.host);
+		// console.log('ModelComponent.onInit');
+		// console.log('item', this.item, 'host', this.host);
 		if (!this.host) {
 			throw ('ModelComponent host is undefined');
 		}

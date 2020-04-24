@@ -26,7 +26,18 @@ export const MessageType = {
 
 export default class AgoraService extends Emittable {
 
+	static getSingleton(state) {
+		console.log('getSingleton', state);
+		if (!this.AGORA) {
+			this.AGORA = new AgoraService(state);
+		}
+		return this.AGORA;
+	}
+
 	constructor(state) {
+		if (AgoraService.AGORA) {
+			throw ('AgoraService is a singleton');
+		}
 		super();
 		this.onStreamPublished = this.onStreamPublished.bind(this);
 		this.onStreamAdded = this.onStreamAdded.bind(this);
@@ -207,15 +218,17 @@ export default class AgoraService extends Emittable {
 	}
 
 	createLocalStream(uid, microphoneId, cameraId) {
-		const local = this.local = AgoraRTC.createStream({
-			streamID: uid,
-			microphoneId: microphoneId,
-			cameraId: cameraId,
-			audio: microphoneId ? true : false,
-			video: cameraId ? true : false,
-			screen: false,
-		});
-		this.initLocalStream();
+		if (microphoneId || cameraId) {
+			const local = this.local = AgoraRTC.createStream({
+				streamID: uid,
+				microphoneId: microphoneId,
+				cameraId: cameraId,
+				audio: microphoneId ? true : false,
+				video: cameraId ? true : false,
+				screen: false,
+			});
+			this.initLocalStream();
+		}
 	}
 
 	initLocalStream() {
@@ -223,11 +236,12 @@ export default class AgoraService extends Emittable {
 		const local = this.local;
 		local.init(() => {
 			// console.log('getUserMedia successfully');
-			const video = document.querySelector('.video--me');
+			const video = document.querySelector('.video--local');
 			if (video) {
 				video.setAttribute('id', 'agora_local_' + local.streamID);
 				local.play('agora_local_' + local.streamID);
 			}
+			this.setState({ local: this.uid });
 			this.publishLocalStream();
 		}, (error) => {
 			console.log('getUserMedia failed', error);
@@ -267,7 +281,7 @@ export default class AgoraService extends Emittable {
 
 	toggleCamera() {
 		const local = this.local;
-		console.log(local);
+		console.log('toggleCamera', local);
 		if (local) {
 			if (local.video) {
 				local.muteVideo();
@@ -430,6 +444,7 @@ export default class AgoraService extends Emittable {
 			video.setAttribute('id', 'agora_remote_' + id);
 			video.classList.add('playing');
 		}
+		this.setState({ remote: id });
 		// console.log('video', video);
 		stream.play('agora_remote_' + id);
 	}
@@ -446,6 +461,7 @@ export default class AgoraService extends Emittable {
 				video.classList.remove('playing');
 			}
 		}
+		this.setState({ remote: null });
 		// console.log('stream-removed remote-uid: ', id);
 	}
 
@@ -457,6 +473,9 @@ export default class AgoraService extends Emittable {
 			if (video) {
 				video.classList.remove('playing');
 			}
+			this.setState({ remote: null });
+		} else {
+			this.setState({ local: null });
 		}
 	}
 

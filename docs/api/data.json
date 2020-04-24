@@ -5,7 +5,7 @@
       "name": "Unisex 100",
       "likes": 82,
       "added": false,
-      "ar": "#",
+      "ar": "models/eleven/ELEVEN EN08_usdz.usdz",
       "envMapFolder": "equirectangular/",
       "envMapFile": "leadenhall_market_2k.hdr",
       "items": [
@@ -53,7 +53,7 @@
       "name": "Unisex 110_BP",
       "likes": 146,
       "added": false,
-      "ar": "#",
+      "ar": "models/eleven/ELEVEN EN08_usdz.usdz",
       "envMapFolder": "equirectangular/",
       "envMapFile": "sculpture_exhibition_1k.hdr",
       "items": [
@@ -63,8 +63,8 @@
           "title": "modello 3d",
           "envMapFolder": "equirectangular/",
           "envMapFile": "sculpture_exhibition_1k.hdr",
-          "gltfFolder": "boots/gltf/",
-          "gltfFile": "boot.gltf"
+          "gltfFolder": "eleven/",
+          "gltfFile": "ELEVEN EN08_gltf.gltf"
         },
         {
           "id": 22,
