@@ -142,6 +142,27 @@ body {
 			justify-content: center;
 			align-items: center;
 		}
+
+		.title {
+			font-weight: 900;
+			font-size: 80px;
+			line-height: 1;
+			color: white;
+			text-shadow: 0 5px rgba(0, 0, 0, 0.5);
+		}
+
+		.abstract {
+			font-size: 40px;
+			line-height: 1;
+			color: white;
+			text-shadow: 0 5px rgba(0, 0, 0, 0.5);
+		}
+
+		.description {
+			color: white;
+			text-shadow: 0 5px rgba(0, 0, 0, 0.5);
+		}
+
 	}
 
 }
@@ -331,20 +352,11 @@ body {
 	font-weight: 900;
 	font-size: 80px;
 	line-height: 1;
-	color: white;
-	text-shadow: 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .abstract {
 	font-size: 40px;
 	line-height: 1;
-	color: white;
-	text-shadow: 0 5px rgba(0, 0, 0, 0.5);
-}
-
-.description {
-	color: white;
-	text-shadow: 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .control-request-modal,

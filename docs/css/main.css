@@ -3564,6 +3564,20 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center; }
+  .model-viewer__view .slider-slide .title {
+    font-weight: 900;
+    font-size: 80px;
+    line-height: 1;
+    color: white;
+    text-shadow: 0 5px rgba(0, 0, 0, 0.5); }
+  .model-viewer__view .slider-slide .abstract {
+    font-size: 40px;
+    line-height: 1;
+    color: white;
+    text-shadow: 0 5px rgba(0, 0, 0, 0.5); }
+  .model-viewer__view .slider-slide .description {
+    color: white;
+    text-shadow: 0 5px rgba(0, 0, 0, 0.5); }
 
 .btn--connect svg {
   fill: white;
@@ -3666,19 +3680,11 @@ body {
 .title {
   font-weight: 900;
   font-size: 80px;
-  line-height: 1;
-  color: white;
-  text-shadow: 0 5px rgba(0, 0, 0, 0.5); }
+  line-height: 1; }
 
 .abstract {
   font-size: 40px;
-  line-height: 1;
-  color: white;
-  text-shadow: 0 5px rgba(0, 0, 0, 0.5); }
-
-.description {
-  color: white;
-  text-shadow: 0 5px rgba(0, 0, 0, 0.5); }
+  line-height: 1; }
 
 .control-request-modal,
 .try-in-ar-modal {
