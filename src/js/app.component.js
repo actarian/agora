@@ -65,7 +65,7 @@ export class AppComponent extends Component {
 	}
 
 	loadData() {
-		HttpService.get$(BASE_HREF + 'api/data.json').pipe(
+		HttpService.get$('./api/data.json').pipe(
 			first()
 		).subscribe(data => {
 			this.data = data;

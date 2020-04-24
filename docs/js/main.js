@@ -1030,7 +1030,7 @@
     _proto.loadData = function loadData() {
       var _this2 = this;
 
-      HttpService.get$(BASE_HREF + 'api/data.json').pipe(operators.first()).subscribe(function (data) {
+      HttpService.get$('./api/data.json').pipe(operators.first()).subscribe(function (data) {
         _this2.data = data;
 
         _this2.initForm();
