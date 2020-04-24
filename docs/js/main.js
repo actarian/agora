@@ -251,6 +251,7 @@
       _this.onPeerLeaved = _this.onPeerLeaved.bind(_assertThisInitialized(_this));
       _this.onTokenPrivilegeWillExpire = _this.onTokenPrivilegeWillExpire.bind(_assertThisInitialized(_this));
       _this.onTokenPrivilegeDidExpire = _this.onTokenPrivilegeDidExpire.bind(_assertThisInitialized(_this));
+      _this.onMessage = _this.onMessage.bind(_assertThisInitialized(_this));
       _this.state = {
         role: RoleType.ATTENDEE,
         connected: false,
@@ -353,15 +354,13 @@
 
       client.join(token, environment.channelName, uid, function (uid) {
         // console.log('User ' + uid + ' join channel successfully');
+        _this4.setState({
+          connected: true
+        });
+
         _this4.getRtmToken(uid).subscribe(function (token) {
           // console.log('token', token);
-          _this4.joinMessageChannel(token.token, uid).then(function (success) {
-            // console.log('joinMessageChannel.success', success);
-            setTimeout(function () {
-              _this4.setState({
-                connected: true
-              });
-            }, 2000);
+          _this4.joinMessageChannel(token.token, uid).then(function (success) {// console.log('joinMessageChannel.success', success);
           }, function (error) {// console.log('joinMessageChannel.error', error);
           });
         }); // !!! require localhost or https
@@ -709,7 +708,7 @@
       var stream = event.stream;
       var id = stream.getId();
       console.log('Subscribe remote stream successfully: ' + id);
-      var video = document.querySelector('.video--other');
+      var video = document.querySelector('.video--remote');
 
       if (video) {
         video.setAttribute('id', 'agora_remote_' + id);
@@ -730,7 +729,7 @@
 
       if (id !== this.uid) {
         stream.stop('agora_remote_' + id);
-        var video = document.querySelector('.video--other');
+        var video = document.querySelector('.video--remote');
 
         if (video) {
           video.classList.remove('playing');
@@ -746,7 +745,7 @@
       var id = event.uid; // console.log('peer-leave id', id);
 
       if (id !== this.uid) {
-        var video = document.querySelector('.video--other');
+        var video = document.querySelector('.video--remote');
 
         if (video) {
           video.classList.remove('playing');
@@ -955,9 +954,9 @@
       };
 
       {
-        this.agora = AgoraService.getSingleton(this.state);
-        this.state = this.agora.state;
-        this.agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
+        var agora = this.agora = AgoraService.getSingleton(this.state);
+        this.state = agora.state;
+        agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
           console.log('message', message);
 
           switch (message.type) {
@@ -966,6 +965,11 @@
 
               break;
           }
+        });
+        agora.state$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (state) {
+          _this.state = state;
+
+          _this.pushChanges();
         });
       }
 
@@ -55231,6 +55235,14 @@ vec4 envMapTexelToLinear(vec4 color) {
               break;
           }
         });
+        /*
+        agora.state$.pipe(
+        	takeUntil(this.unsubscribe$)
+        ).subscribe(state => {
+        	this.state = state;
+        	this.pushChanges();
+        });
+        */
       }
     };
 
@@ -55631,6 +55643,14 @@ vec4 envMapTexelToLinear(vec4 color) {
               break;
           }
         });
+        /*
+        agora.state$.pipe(
+        	takeUntil(this.unsubscribe$)
+        ).subscribe(state => {
+        	this.state = state;
+        	this.pushChanges();
+        });
+        */
       }
       /*
       this.slider$().pipe(

@@ -307,6 +307,14 @@ export class ModelViewerComponent extends Component {
 						break;
 				}
 			});
+			/*
+			agora.state$.pipe(
+				takeUntil(this.unsubscribe$)
+			).subscribe(state => {
+				this.state = state;
+				this.pushChanges();
+			});
+			*/
 		}
 	}
 

@@ -46,6 +46,7 @@ export default class AgoraService extends Emittable {
 		this.onPeerLeaved = this.onPeerLeaved.bind(this);
 		this.onTokenPrivilegeWillExpire = this.onTokenPrivilegeWillExpire.bind(this);
 		this.onTokenPrivilegeDidExpire = this.onTokenPrivilegeDidExpire.bind(this);
+		this.onMessage = this.onMessage.bind(this);
 		this.state = {
 			role: RoleType.ATTENDEE,
 			connected: false,
@@ -128,13 +129,11 @@ export default class AgoraService extends Emittable {
 		token = null; // !!!
 		client.join(token, environment.channelName, uid, (uid) => {
 			// console.log('User ' + uid + ' join channel successfully');
+			this.setState({ connected: true });
 			this.getRtmToken(uid).subscribe(token => {
 				// console.log('token', token);
 				this.joinMessageChannel(token.token, uid).then((success) => {
 					// console.log('joinMessageChannel.success', success);
-					setTimeout(() => {
-						this.setState({ connected: true });
-					}, 2000);
 				}, error => {
 					// console.log('joinMessageChannel.error', error);
 				});
@@ -439,7 +438,7 @@ export default class AgoraService extends Emittable {
 		var stream = event.stream;
 		var id = stream.getId();
 		console.log('Subscribe remote stream successfully: ' + id);
-		const video = document.querySelector('.video--other');
+		const video = document.querySelector('.video--remote');
 		if (video) {
 			video.setAttribute('id', 'agora_remote_' + id);
 			video.classList.add('playing');
@@ -456,7 +455,7 @@ export default class AgoraService extends Emittable {
 		// console.log('stream-removed remote-uid: ', id);
 		if (id !== this.uid) {
 			stream.stop('agora_remote_' + id);
-			const video = document.querySelector('.video--other');
+			const video = document.querySelector('.video--remote');
 			if (video) {
 				video.classList.remove('playing');
 			}
@@ -469,7 +468,7 @@ export default class AgoraService extends Emittable {
 		var id = event.uid;
 		// console.log('peer-leave id', id);
 		if (id !== this.uid) {
-			const video = document.querySelector('.video--other');
+			const video = document.querySelector('.video--remote');
 			if (video) {
 				video.classList.remove('playing');
 			}

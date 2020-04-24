@@ -29,9 +29,9 @@ export class AppComponent extends Component {
 			audioMuted: false,
 		};
 		if (!DEBUG) {
-			this.agora = AgoraService.getSingleton(this.state);
-			this.state = this.agora.state;
-			this.agora.message$.pipe(
+			const agora = this.agora = AgoraService.getSingleton(this.state);
+			this.state = agora.state;
+			agora.message$.pipe(
 				takeUntil(this.unsubscribe$)
 			).subscribe(message => {
 				console.log('message', message);
@@ -40,6 +40,12 @@ export class AppComponent extends Component {
 						this.onRemoteControlRequest(message);
 						break;
 				}
+			});
+			agora.state$.pipe(
+				takeUntil(this.unsubscribe$)
+			).subscribe(state => {
+				this.state = state;
+				this.pushChanges();
 			});
 		} else {
 			this.state.connected = true;

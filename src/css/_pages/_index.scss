@@ -299,7 +299,7 @@ body {
 .video--local,
 .video--remote {
 	&.disabled {
-		display: none;
+		visibility: hidden;
 	}
 }
 

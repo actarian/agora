@@ -3647,7 +3647,7 @@ body {
 
 .video--local.disabled,
 .video--remote.disabled {
-  display: none; }
+  visibility: hidden; }
 
 @keyframes flip-2-hor-top-1 {
   0% {
