@@ -308,14 +308,14 @@ export default class AgoraService extends Emittable {
 	}
 
 	toggleControl() {
-		if (this.control) {
+		if (this.state.control) {
 			this.sendRemoteControlDismiss((control) => {
-				console.log('sendRemoteControlDismiss', control);
+				console.log('AgoraService.sendRemoteControlDismiss', control);
 				this.setState({ control: !control });
 			});
 		} else {
 			this.sendRemoteControlRequest((control) => {
-				console.log('sendRemoteControlRequest', control);
+				console.log('AgoraService.sendRemoteControlRequest', control);
 				this.setState({ control: control });
 			});
 		}
@@ -342,6 +342,7 @@ export default class AgoraService extends Emittable {
 					message
 				},
 			}).then((message) => {
+				console.log('AgoraService.sendRemoteControlDismiss return', message);
 				if (message.type === MessageType.RequestControlDismissed) {
 					resolve(true);
 				} else if (message.type === MessageType.RequestControlRejected) {
@@ -360,6 +361,7 @@ export default class AgoraService extends Emittable {
 					message
 				},
 			}).then((message) => {
+				console.log('AgoraService.sendRemoteControlRequest return', message);
 				if (message.type === MessageType.RequestControlAccepted) {
 					/*
 			  this.remoteDeviceInfo = message.payload;
@@ -414,6 +416,17 @@ export default class AgoraService extends Emittable {
 				this.emit(`message-${message.rpcid}`, message);
 			}
 			this.message$.next(message);
+			switch (message.type) {
+				case MessageType.RequestControlDismiss:
+					this.setState({ locked: false });
+					this.sendMessage({
+						type: MessageType.RequestControlDismissed
+					});
+					break;
+				case MessageType.RequestControlDismissed:
+					this.setState({ control: false });
+					break;
+			}
 			/*
 			// this.emit('wrc-message', message);
 			if (message.type === WRCMessageType.WRC_CLOSE) {

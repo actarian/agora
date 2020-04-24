@@ -576,9 +576,9 @@
     _proto.toggleControl = function toggleControl() {
       var _this9 = this;
 
-      if (this.control) {
+      if (this.state.control) {
         this.sendRemoteControlDismiss(function (control) {
-          console.log('sendRemoteControlDismiss', control);
+          console.log('AgoraService.sendRemoteControlDismiss', control);
 
           _this9.setState({
             control: !control
@@ -586,7 +586,7 @@
         });
       } else {
         this.sendRemoteControlRequest(function (control) {
-          console.log('sendRemoteControlRequest', control);
+          console.log('AgoraService.sendRemoteControlRequest', control);
 
           _this9.setState({
             control: control
@@ -619,6 +619,8 @@
             message: message
           }
         }).then(function (message) {
+          console.log('AgoraService.sendRemoteControlDismiss return', message);
+
           if (message.type === MessageType.RequestControlDismissed) {
             resolve(true);
           } else if (message.type === MessageType.RequestControlRejected) {
@@ -639,6 +641,8 @@
             message: message
           }
         }).then(function (message) {
+          console.log('AgoraService.sendRemoteControlRequest return', message);
+
           if (message.type === MessageType.RequestControlAccepted) {
             /*
             this.remoteDeviceInfo = message.payload;
@@ -693,6 +697,23 @@
         }
 
         this.message$.next(message);
+
+        switch (message.type) {
+          case MessageType.RequestControlDismiss:
+            this.setState({
+              locked: false
+            });
+            this.sendMessage({
+              type: MessageType.RequestControlDismissed
+            });
+            break;
+
+          case MessageType.RequestControlDismissed:
+            this.setState({
+              control: false
+            });
+            break;
+        }
         /*
         // this.emit('wrc-message', message);
         if (message.type === WRCMessageType.WRC_CLOSE) {
@@ -701,6 +722,7 @@
           this.emit('remote-close')
         }
         */
+
       }
     };
 
