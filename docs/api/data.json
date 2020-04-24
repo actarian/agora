@@ -31,13 +31,13 @@
           "id": 13,
           "type": "picture",
           "title": "modello 3d",
-          "image": "https://source.unsplash.com/random/800x600"
+          "image": "./img/picture-01.jpg"
         },
         {
           "id": 14,
           "type": "picture",
           "title": "modello 3d",
-          "image": "https://source.unsplash.com/random/800x600"
+          "image": "./img/picture-02.jpg"
         },
         {
           "id": 15,
@@ -63,8 +63,8 @@
           "title": "modello 3d",
           "envMapFolder": "equirectangular/",
           "envMapFile": "sculpture_exhibition_1k.hdr",
-          "gltfFolder": "eleven/",
-          "gltfFile": "ELEVEN EN08_gltf.gltf"
+          "gltfFolder": "boots/gltf/",
+          "gltfFile": "boot.gltf"
         },
         {
           "id": 22,
@@ -79,13 +79,13 @@
           "id": 23,
           "type": "picture",
           "title": "modello 3d",
-          "image": "https://source.unsplash.com/random/800x600"
+          "image": "./img/picture-01.jpg"
         },
         {
           "id": 24,
           "type": "picture",
           "title": "modello 3d",
-          "image": "https://source.unsplash.com/random/800x600"
+          "image": "./img/picture-02.jpg"
         },
         {
           "id": 25,
