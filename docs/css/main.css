@@ -3594,7 +3594,7 @@ body {
   margin-left: 140px; }
   .btn--control, .btn--control:active, .btn--control:focus, .btn--control:hover, .btn--control:visited {
     border: 2px solid rgba(16, 16, 16, 0.2);
-    background: transparent;
+    background: white;
     color: #101010; }
     .btn--control svg, .btn--control:active svg, .btn--control:focus svg, .btn--control:hover svg, .btn--control:visited svg {
       color: #101010; }
