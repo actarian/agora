@@ -203,10 +203,12 @@ export class ModelViewerComponent extends Component {
 					this.panorama.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01 + Math.PI, 0);
 					this.render();
 					// this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
-					agora.sendMessage({
-						type: MessageType.SlideRotate,
-						coords: [group.rotation.x, group.rotation.y, group.rotation.z]
-					});
+					if (this.agora && this.agora.state.control) {
+						this.agora.sendMessage({
+							type: MessageType.SlideRotate,
+							coords: [group.rotation.x, group.rotation.y, group.rotation.z]
+						});
+					}
 				} else if (event instanceof DragUpEvent) {
 
 				}

@@ -55180,10 +55180,12 @@ vec4 envMapTexelToLinear(vec4 color) {
           _this2.render(); // this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
 
 
-          agora.sendMessage({
-            type: MessageType.SlideRotate,
-            coords: [group.rotation.x, group.rotation.y, group.rotation.z]
-          });
+          if (_this2.agora && _this2.agora.state.control) {
+            _this2.agora.sendMessage({
+              type: MessageType.SlideRotate,
+              coords: [group.rotation.x, group.rotation.y, group.rotation.z]
+            });
+          }
         }
       }));
     };
@@ -55269,14 +55271,13 @@ vec4 envMapTexelToLinear(vec4 color) {
       window.addEventListener('resize', this.resize, false);
 
       {
-        var _agora = this.agora = AgoraService.getSingleton();
-
-        _agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
+        var agora = this.agora = AgoraService.getSingleton();
+        agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
           switch (message.type) {
             case MessageType.SlideRotate:
               console.log(message);
 
-              if (_agora.state.locked && message.coords) {
+              if (agora.state.locked && message.coords) {
                 var group = _this3.objects.children[_this3.index];
                 group.rotation.set(message.coords[0], message.coords[1], message.coords[2]);
 
@@ -55307,7 +55308,6 @@ vec4 envMapTexelToLinear(vec4 color) {
         	this.pushChanges();
         });
         */
-
       }
     };
 
@@ -55808,6 +55808,13 @@ vec4 envMapTexelToLinear(vec4 color) {
         _this4.pushChanges();
 
         _this4.change.next(_this4.current);
+
+        if (_this4.agora && _this4.agora.state.control) {
+          _this4.agora.sendMessage({
+            type: MessageType.SlideChange,
+            index: index
+          });
+        }
       });
     };
 

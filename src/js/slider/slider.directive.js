@@ -125,6 +125,12 @@ export class SliderDirective extends Component {
 			this.current = index;
 			this.pushChanges();
 			this.change.next(this.current);
+			if (this.agora && this.agora.state.control) {
+				this.agora.sendMessage({
+					type: MessageType.SlideChange,
+					index: index
+				});
+			}
 		});
 	}
 
