@@ -752,11 +752,15 @@
         }
 
         this.setState({
-          remote: null
+          remote: null,
+          locked: false,
+          control: false
         });
       } else {
         this.setState({
-          local: null
+          local: null,
+          locked: false,
+          control: false
         });
       }
     };

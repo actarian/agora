@@ -472,9 +472,9 @@ export default class AgoraService extends Emittable {
 			if (video) {
 				video.classList.remove('playing');
 			}
-			this.setState({ remote: null });
+			this.setState({ remote: null, locked: false, control: false });
 		} else {
-			this.setState({ local: null });
+			this.setState({ local: null, locked: false, control: false });
 		}
 	}
 
