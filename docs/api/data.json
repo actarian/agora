@@ -6,6 +6,8 @@
       "likes": 82,
       "added": false,
       "ar": "#",
+      "envMapFolder": "equirectangular/",
+      "envMapFile": "leadenhall_market_2k.hdr",
       "items": [
         {
           "id": 11,
@@ -52,6 +54,8 @@
       "likes": 146,
       "added": false,
       "ar": "#",
+      "envMapFolder": "equirectangular/",
+      "envMapFile": "sculpture_exhibition_1k.hdr",
       "items": [
         {
           "id": 21,

@@ -34,14 +34,6 @@
     subClass.__proto__ = superClass;
   }
 
-  function _assertThisInitialized(self) {
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-
-    return self;
-  }
-
   var DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
   var environment = {
     appKey: 'ab4289a46cd34da6a61fd8d66774b65f',
@@ -54,69 +46,6 @@
       textures: 'textures/'
     }
   };
-
-  var Emittable = /*#__PURE__*/function () {
-    function Emittable() {
-      this.events = {};
-    }
-
-    var _proto = Emittable.prototype;
-
-    _proto.on = function on(type, callback) {
-      var _this = this;
-
-      var event = this.events[type] = this.events[type] || [];
-      event.push(callback);
-      return function () {
-        _this.events[type] = event.filter(function (x) {
-          return x !== callback;
-        });
-      };
-    };
-
-    _proto.off = function off(type, callback) {
-      var event = this.events[type];
-
-      if (event) {
-        this.events[type] = event.filter(function (x) {
-          return x !== callback;
-        });
-      }
-    };
-
-    _proto.once = function once(type, callback) {
-      var _this2 = this;
-
-      var once = function once(data) {
-        callback(data);
-
-        _this2.off(type, once);
-      };
-
-      this.on(type, once);
-    };
-
-    _proto.emit = function emit(type, data) {
-      var event = this.events[type];
-
-      if (event) {
-        event.forEach(function (callback) {
-          // callback.call(this, data);
-          callback(data);
-        });
-      }
-
-      var broadcast = this.events.broadcast;
-
-      if (broadcast) {
-        broadcast.forEach(function (callback) {
-          callback(type, data);
-        });
-      }
-    };
-
-    return Emittable;
-  }();
 
   var STATIC = window.location.port === '41999' || window.location.host === 'actarian.github.io';
   var DEVELOPMENT$1 = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
@@ -222,526 +151,6 @@
     SlideRotate: 'slideRotate',
     MenuNavTo: 'menuNavTo'
   };
-
-  var AgoraService = /*#__PURE__*/function (_Emittable) {
-    _inheritsLoose(AgoraService, _Emittable);
-
-    function AgoraService(state) {
-      var _this;
-
-      _this = _Emittable.call(this) || this;
-      _this.onStreamPublished = _this.onStreamPublished.bind(_assertThisInitialized(_this));
-      _this.onStreamAdded = _this.onStreamAdded.bind(_assertThisInitialized(_this));
-      _this.onStreamSubscribed = _this.onStreamSubscribed.bind(_assertThisInitialized(_this));
-      _this.onStreamRemoved = _this.onStreamRemoved.bind(_assertThisInitialized(_this));
-      _this.onPeerLeaved = _this.onPeerLeaved.bind(_assertThisInitialized(_this));
-      _this.onTokenPrivilegeWillExpire = _this.onTokenPrivilegeWillExpire.bind(_assertThisInitialized(_this));
-      _this.onTokenPrivilegeDidExpire = _this.onTokenPrivilegeDidExpire.bind(_assertThisInitialized(_this));
-      _this.state = {
-        role: RoleType.ATTENDEE,
-        connected: false,
-        locked: false,
-        control: false,
-        cameraMuted: true,
-        audioMuted: true
-      };
-
-      if (state) {
-        _this.state = Object.assign(_this.state, state);
-      }
-
-      _this.state$ = new rxjs.BehaviorSubject(_this.state);
-      _this.message$ = new rxjs.Subject();
-      return _this;
-    }
-
-    var _proto = AgoraService.prototype;
-
-    _proto.setState = function setState(state) {
-      Object.assign(this.state, state);
-      this.state$.next(this.state);
-    };
-
-    _proto.connect$ = function connect$() {
-      var _this2 = this;
-
-      this.createClient(function () {
-        _this2.getRtcToken().subscribe(function (token) {
-          // console.log('token', token);
-          _this2.joinChannel(token.token);
-        });
-      });
-      return this.state$;
-    };
-
-    _proto.getRtcToken = function getRtcToken() {
-      {
-        return rxjs.of({
-          token: null
-        });
-      }
-    };
-
-    _proto.getRtmToken = function getRtmToken(uid) {
-      {
-        return rxjs.of({
-          token: null
-        });
-      }
-    };
-
-    _proto.createClient = function createClient(next) {
-      var _this3 = this;
-
-      if (this.client) {
-        next();
-      } // console.log('agora rtc sdk version: ' + AgoraRTC.VERSION + ' compatible: ' + AgoraRTC.checkSystemRequirements());
-
-
-      AgoraRTC.Logger.setLogLevel(AgoraRTC.Logger.ERROR);
-      var client = this.client = AgoraRTC.createClient({
-        mode: 'live',
-        codec: 'h264'
-      }); // rtc
-
-      client.init(environment.appKey, function () {
-        // console.log('AgoraRTC client initialized');
-        next();
-      }, function (error) {
-        // console.log('AgoraRTC client init failed', error);
-        _this3.client = null;
-      });
-      client.on('stream-published', this.onStreamPublished); //subscribe remote stream
-
-      client.on('stream-added', this.onStreamAdded);
-      client.on('stream-subscribed', this.onStreamSubscribed);
-      client.on('error', this.onError); // Occurs when the peer user leaves the channel; for example, the peer user calls Client.leave.
-
-      client.on('peer-leave', this.onPeerLeaved);
-      client.on('stream-removed', this.onStreamRemoved);
-      client.on('onTokenPrivilegeWillExpire', this.onTokenPrivilegeWillExpire);
-      client.on('onTokenPrivilegeDidExpire', this.onTokenPrivilegeDidExpire); // console.log('agora rtm sdk version: ' + AgoraRTM.VERSION + ' compatible');
-
-      var messageClient = this.messageClient = AgoraRTM.createInstance(environment.appKey, {
-        logFilter: AgoraRTM.LOG_FILTER_ERROR
-      }); // LOG_FILTER_DEBUG
-
-      messageClient.on('ConnectionStateChanged', console.error);
-      messageClient.on('MessageFromPeer', console.warn);
-    };
-
-    _proto.joinChannel = function joinChannel(token) {
-      var _this4 = this;
-
-      var client = this.client;
-      var uid = null;
-      token = null; // !!!
-
-      client.join(token, environment.channelName, uid, function (uid) {
-        // console.log('User ' + uid + ' join channel successfully');
-        _this4.getRtmToken(uid).subscribe(function (token) {
-          // console.log('token', token);
-          _this4.joinMessageChannel(token.token, uid).then(function (success) {
-            // console.log('joinMessageChannel.success', success);
-            setTimeout(function () {
-              _this4.setState({
-                connected: true
-              });
-            }, 2000);
-          }, function (error) {// console.log('joinMessageChannel.error', error);
-          });
-        }); // !!! require localhost or https
-
-
-        _this4.detectDevices(function (devices) {
-          // console.log(devices);
-          var cameraId = devices.videos.length ? devices.videos[0].deviceId : null;
-          var microphoneId = devices.audios.length ? devices.audios[0].deviceId : null;
-
-          _this4.createLocalStream(uid, microphoneId, cameraId);
-        });
-      }, function (error) {
-        console.log('Join channel failed', error);
-      }); // https://console.agora.io/invite?sign=YXBwSWQlM0RhYjQyODlhNDZjZDM0ZGE2YTYxZmQ4ZDY2Nzc0YjY1ZiUyNm5hbWUlM0RaYW1wZXR0aSUyNnRpbWVzdGFtcCUzRDE1ODY5NjM0NDU=// join link expire in 30 minutes
-    };
-
-    _proto.joinMessageChannel = function joinMessageChannel(token, uid) {
-      var _this5 = this;
-
-      return new Promise(function (resolve, reject) {
-        var messageClient = _this5.messageClient;
-
-        messageClient.login({
-          uid: uid.toString()
-        }).then(function () {
-          _this5.messageChannel = messageClient.createChannel(environment.channelName);
-          return _this5.messageChannel.join();
-        }).then(function () {
-          _this5.messageChannel.on('ChannelMessage', _this5.onMessage);
-
-          resolve(uid);
-        }).catch(reject);
-      });
-    };
-
-    _proto.sendMessage = function sendMessage(message) {
-      var _this6 = this;
-
-      message.wrc_version = 'beta';
-      message.uid = this.uid;
-      var messageChannel = this.messageChannel;
-      messageChannel.sendMessage({
-        text: JSON.stringify(message)
-      }); // console.log('wrc: send', message);
-
-      if (message.rpcid) {
-        return new Promise(function (resolve) {
-          _this6.once("message-" + message.rpcid, function (message) {
-            resolve(message);
-          });
-        });
-      } else {
-        return Promise.resolve(message);
-      }
-    };
-
-    _proto.detectDevices = function detectDevices(next) {
-      AgoraRTC.getDevices(function (devices) {
-        devices.filter(function (device) {
-          return ['audioinput', 'videoinput'].indexOf(device.kind) !== -1;
-        }).map(function (device) {
-          return {
-            label: device.label,
-            deviceId: device.deviceId,
-            kind: device.kind
-          };
-        });
-        var videos = [];
-        var audios = [];
-
-        for (var i = 0; i < devices.length; i++) {
-          var device = devices[i];
-
-          if ('videoinput' == device.kind) {
-            videos.push({
-              label: device.label || 'camera-' + videos.length,
-              deviceId: device.deviceId,
-              kind: device.kind
-            });
-          }
-
-          if ('audioinput' == device.kind) {
-            audios.push({
-              label: device.label || 'microphone-' + videos.length,
-              deviceId: device.deviceId,
-              kind: device.kind
-            });
-          }
-        }
-
-        next({
-          videos: videos,
-          audios: audios
-        });
-      });
-    };
-
-    _proto.createLocalStream = function createLocalStream(uid, microphoneId, cameraId) {
-      var local = this.local = AgoraRTC.createStream({
-        streamID: uid,
-        microphoneId: microphoneId,
-        cameraId: cameraId,
-        audio: microphoneId ? true : false,
-        video: cameraId ? true : false,
-        screen: false
-      });
-      this.initLocalStream();
-    };
-
-    _proto.initLocalStream = function initLocalStream() {
-      var _this7 = this;
-
-      var client = this.client;
-      var local = this.local;
-      local.init(function () {
-        // console.log('getUserMedia successfully');
-        var video = document.querySelector('.video--me');
-
-        if (video) {
-          video.setAttribute('id', 'agora_local_' + local.streamID);
-          local.play('agora_local_' + local.streamID);
-        }
-
-        _this7.publishLocalStream();
-      }, function (error) {
-        console.log('getUserMedia failed', error);
-      });
-    };
-
-    _proto.publishLocalStream = function publishLocalStream() {
-      var client = this.client;
-      var local = this.local; //publish local stream
-
-      client.publish(local, function (error) {
-        console.log('Publish local stream error: ' + error);
-      });
-    };
-
-    _proto.unpublishLocalStream = function unpublishLocalStream() {
-      var client = this.client;
-      var local = this.local;
-      client.unpublish(local, function (error) {
-        console.log('unpublish failed');
-      });
-    };
-
-    _proto.leaveChannel = function leaveChannel() {
-      var _this8 = this;
-
-      var client = this.client;
-      client.leave(function () {
-        // console.log('Leave channel successfully');
-        _this8.setState({
-          connected: false
-        });
-
-        var messageChannel = _this8.messageChannel;
-        var messageClient = _this8.messageClient;
-        messageChannel.leave();
-        messageClient.logout();
-      }, function (error) {
-        console.log('Leave channel failed');
-      });
-    };
-
-    _proto.toggleCamera = function toggleCamera() {
-      var local = this.local;
-      console.log(local);
-
-      if (local) {
-        if (local.video) {
-          local.muteVideo();
-        } else {
-          local.unmuteVideo();
-        }
-      }
-    };
-
-    _proto.toggleAudio = function toggleAudio() {
-      var local = this.local;
-      console.log(local);
-
-      if (local) {
-        if (local.audio) {
-          local.muteAudio();
-        } else {
-          local.unmuteAudio();
-        }
-      }
-    };
-
-    _proto.toggleControl = function toggleControl() {
-      var _this9 = this;
-
-      if (this.control) {
-        this.sendRemoteControlDismiss(function (control) {
-          _this9.setState({
-            control: !control
-          });
-        });
-      } else {
-        this.sendRemoteControlRequest(function (control) {
-          _this9.setState({
-            control: control
-          });
-        });
-      }
-    };
-
-    _proto.getRemoteTargetUID = function getRemoteTargetUID() {
-      if (!this.rtmChannel || !this.cname) {
-        throw new Error("not join channel");
-      }
-
-      return this.sendMessage({
-        type: MessageType.Ping,
-        rpcid: Date.now().toString()
-      }).then(function (message) {
-        return message.payload.uid;
-      });
-    };
-
-    _proto.sendRemoteControlDismiss = function sendRemoteControlDismiss(message) {
-      var _this10 = this;
-
-      return new Promise(function (resolve, reject) {
-        _this10.sendMessage({
-          type: MessageType.RequestControlDismiss,
-          rpcid: Date.now().toString(),
-          payload: {
-            message: message
-          }
-        }).then(function (message) {
-          if (message.type === MessageType.RequestControlDismissed) {
-            resolve(true);
-          } else if (message.type === MessageType.RequestControlRejected) {
-            resolve(false);
-          }
-        });
-      });
-    };
-
-    _proto.sendRemoteControlRequest = function sendRemoteControlRequest(message) {
-      var _this11 = this;
-
-      return new Promise(function (resolve, reject) {
-        _this11.sendMessage({
-          type: MessageType.RequestControl,
-          rpcid: Date.now().toString(),
-          payload: {
-            message: message
-          }
-        }).then(function (message) {
-          if (message.type === MessageType.RequestControlAccepted) {
-            /*
-            this.remoteDeviceInfo = message.payload;
-            if (this.playerElement) {
-            this.remoteStream.play(this.playerElement.id, { fit: 'contain', muted: true });
-            this.controlMouse()
-            resolve(true);
-            return;
-            } else {
-            reject('request not accepted');
-            }
-            */
-            resolve(true);
-          } else if (message.type === MessageType.RequestControlRejected) {
-            // this.remoteDeviceInfo = undefined
-            resolve(false);
-          }
-        });
-      });
-    };
-
-    _proto.getSessionStats = function getSessionStats() {
-      var client = this.client;
-      client.getSessionStats(function (stats) {
-        console.log("Current Session Duration: " + stats.Duration);
-        console.log("Current Session UserCount: " + stats.UserCount);
-        console.log("Current Session SendBytes: " + stats.SendBytes);
-        console.log("Current Session RecvBytes: " + stats.RecvBytes);
-        console.log("Current Session SendBitrate: " + stats.SendBitrate);
-        console.log("Current Session RecvBitrate: " + stats.RecvBitrate);
-      });
-    };
-
-    _proto.getSystemStats = function getSystemStats() {
-      var client = this.client;
-      client.getSystemStats(function (stats) {
-        console.log("Current battery level: " + stats.BatteryLevel);
-      });
-    } // events
-    ;
-
-    _proto.onError = function onError(error) {
-      console.log('Agora', error);
-    };
-
-    _proto.onMessage = function onMessage(data, uid) {
-      if (uid !== this.uid) {
-        var message = JSON.parse(data.text);
-        console.log('wrc: receive', message);
-
-        if (message.rpcid) {
-          this.emit("message-" + message.rpcid, message);
-        }
-
-        this.message$.next(message);
-        /*
-        // this.emit('wrc-message', message);
-        if (message.type === WRCMessageType.WRC_CLOSE) {
-          console.log('receive wrc close')
-          this.cleanRemote()
-          this.emit('remote-close')
-        }
-        */
-      }
-    };
-
-    _proto.onStreamPublished = function onStreamPublished(event) {
-      console.log('Publish local stream successfully');
-    };
-
-    _proto.onStreamAdded = function onStreamAdded(event) {
-      var client = this.client;
-      var stream = event.stream;
-      var id = stream.getId();
-      console.log('New stream added: ' + id);
-
-      if (id !== this.uid) {
-        client.subscribe(stream, function (error) {
-          console.log('stream subscribe failed', error);
-        });
-      }
-    };
-
-    _proto.onStreamSubscribed = function onStreamSubscribed(event) {
-      var stream = event.stream;
-      var id = stream.getId();
-      console.log('Subscribe remote stream successfully: ' + id);
-      var video = document.querySelector('.video--other');
-
-      if (video) {
-        video.setAttribute('id', 'agora_remote_' + id);
-        video.classList.add('playing');
-      } // console.log('video', video);
-
-
-      stream.play('agora_remote_' + id);
-    } // Occurs when the remote stream is removed; for example, a peer user calls Client.unpublish.
-    ;
-
-    _proto.onStreamRemoved = function onStreamRemoved(event) {
-      var stream = event.stream;
-      var id = stream.getId(); // console.log('stream-removed remote-uid: ', id);
-
-      if (id !== this.uid) {
-        stream.stop('agora_remote_' + id);
-        var video = document.querySelector('.video--other');
-
-        if (video) {
-          video.classList.remove('playing');
-        }
-      } // console.log('stream-removed remote-uid: ', id);
-
-    };
-
-    _proto.onPeerLeaved = function onPeerLeaved(event) {
-      var id = event.uid; // console.log('peer-leave id', id);
-
-      if (id !== this.uid) {
-        var video = document.querySelector('.video--other');
-
-        if (video) {
-          video.classList.remove('playing');
-        }
-      }
-    };
-
-    _proto.onTokenPrivilegeWillExpire = function onTokenPrivilegeWillExpire(event) {
-      // After requesting a new token
-      // client.renewToken(token);
-      console.log('onTokenPrivilegeWillExpire');
-    };
-
-    _proto.onTokenPrivilegeDidExpire = function onTokenPrivilegeDidExpire(event) {
-      // After requesting a new token
-      // client.renewToken(token);
-      console.log('onTokenPrivilegeDidExpire');
-    };
-
-    return AgoraService;
-  }(Emittable);
 
   var BASE_HREF = document.querySelector('base').getAttribute('href');
 
@@ -901,7 +310,6 @@
 
     // !!! require localhost or https
     _proto.onInit = function onInit() {
-      var _this = this;
 
       var _getContext = rxcomp.getContext(this),
           node = _getContext.node;
@@ -935,18 +343,7 @@
       };
 
       {
-        this.agora = new AgoraService(this.state);
-        this.state = this.agora.state;
-        this.agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
-          console.log('message', message);
-
-          switch (message.type) {
-            case MessageType.RequestControl:
-              _this.onRemoteControlRequest(message);
-
-              break;
-          }
-        });
+        this.state.connected = true;
       }
 
       this.loadData();
@@ -1016,30 +413,16 @@
     _proto.disconnect = function disconnect() {
       this.state.connecting = false;
 
-      if (this.agora) {
-        this.agora.leaveChannel();
-      } else {
+      {
         this.state.connected = false;
         this.pushChanges();
       }
     };
 
     _proto.onChange = function onChange(index) {
-      if (this.agora && this.state.control) {
-        this.agora.sendMessage({
-          type: MessageType.SlideChange,
-          index: index
-        });
-      }
     };
 
     _proto.onRotate = function onRotate(coords) {
-      if (this.agora && this.state.control) {
-        this.agora.sendMessage({
-          type: MessageType.SlideRotate,
-          coords: coords
-        });
-      }
     };
 
     _proto.onRemoteControlRequest = function onRemoteControlRequest(message) {
@@ -1055,10 +438,6 @@
         } else {
           message.type = MessageType.RequestControlRejected;
           _this5.state.locked = false;
-        }
-
-        if (_this5.agora) {
-          _this5.agora.sendMessage(message);
         }
 
         _this5.pushChanges();
@@ -1087,22 +466,14 @@
     ;
 
     _proto.toggleCamera = function toggleCamera() {
-      if (this.agora) {
-        this.agora.toggleCamera();
-      }
     };
 
     _proto.toggleAudio = function toggleAudio() {
-      if (this.agora) {
-        this.agora.toggleAudio();
-      }
     };
 
     _proto.toggleControl = function toggleControl() {
       {
-        if (this.agora) {
-          this.agora.toggleControl();
-        }
+        this.onRemoteControlRequest({});
       }
     };
 
@@ -1816,7 +1187,6 @@
   var LinearFilter = 1006;
   var LinearMipmapNearestFilter = 1007;
   var LinearMipmapLinearFilter = 1008;
-  var LinearMipMapLinearFilter = 1008;
   var UnsignedByteType = 1009;
   var ByteType = 1010;
   var ShortType = 1011;
@@ -54669,214 +54039,6 @@ vec4 envMapTexelToLinear(vec4 color) {
 
   } );
 
-  /**
-   * @author Emmett Lalish / elalish
-   *
-   * This class generates custom mipmaps for a roughness map by encoding the lost variation in the
-   * normal map mip levels as increased roughness in the corresponding roughness mip levels. This
-   * helps with rendering accuracy for MeshStandardMaterial, and also helps with anti-aliasing when
-   * using PMREM. If the normal map is larger than the roughness map, the roughness map will be
-   * enlarged to match the dimensions of the normal map.
-   */
-
-  var RoughnessMipmapper = ( function () {
-
-  	var _mipmapMaterial = _getMipmapMaterial();
-  	var _scene = new Scene();
-  	_scene.add( new Mesh( new PlaneBufferGeometry( 2, 2 ), _mipmapMaterial ) );
-
-  	var _flatCamera = new OrthographicCamera( 0, 1, 0, 1, 0, 1 );
-  	var _tempTarget = null;
-  	var _renderer = null;
-
-  	// constructor
-  	var RoughnessMipmapper = function ( renderer ) {
-
-  		_renderer = renderer;
-  		_renderer.compile( _scene, _flatCamera );
-
-  	};
-
-  	RoughnessMipmapper.prototype = {
-
-  		constructor: RoughnessMipmapper,
-
-  		generateMipmaps: function ( material ) {
-
-  			var { roughnessMap, normalMap } = material;
-  			if ( roughnessMap == null || normalMap == null || ! roughnessMap.generateMipmaps ||
-                  material.userData.roughnessUpdated ) return;
-
-  			material.userData.roughnessUpdated = true;
-
-  			var width = Math.max( roughnessMap.image.width, normalMap.image.width );
-  			var height = Math.max( roughnessMap.image.height, normalMap.image.height );
-  			if ( ! MathUtils.isPowerOfTwo( width ) || ! MathUtils.isPowerOfTwo( height ) ) return;
-
-  			var oldTarget = _renderer.getRenderTarget();
-  			var autoClear = _renderer.autoClear;
-  			_renderer.autoClear = false;
-
-  			if ( _tempTarget == null || _tempTarget.width !== width || _tempTarget.height !== height ) {
-
-  				if ( _tempTarget != null ) _tempTarget.dispose();
-
-  				_tempTarget = new WebGLRenderTarget( width, height, { depthBuffer: false, stencilBuffer: false } );
-  				_tempTarget.scissorTest = true;
-
-  			}
-
-  			if ( width !== roughnessMap.image.width || height !== roughnessMap.image.height ) {
-
-  				var newRoughnessTarget = new WebGLRenderTarget( width, height, {
-  					minFilter: LinearMipMapLinearFilter,
-  					depthBuffer: false,
-  					stencilBuffer: false
-  				} );
-  				newRoughnessTarget.texture.generateMipmaps = true;
-  				// Setting the render target causes the memory to be allocated.
-  				_renderer.setRenderTarget( newRoughnessTarget );
-  				material.roughnessMap = newRoughnessTarget.texture;
-  				if ( material.metalnessMap == roughnessMap ) material.metalnessMap = material.roughnessMap;
-  				if ( material.aoMap == roughnessMap ) material.aoMap = material.roughnessMap;
-
-  			}
-
-  			_mipmapMaterial.uniforms.roughnessMap.value = roughnessMap;
-  			_mipmapMaterial.uniforms.normalMap.value = normalMap;
-
-  			var position = new Vector2( 0, 0 );
-  			var texelSize = _mipmapMaterial.uniforms.texelSize.value;
-  			for ( var mip = 0; width >= 1 && height >= 1;
-  				++ mip, width /= 2, height /= 2 ) {
-
-  				// Rendering to a mip level is not allowed in webGL1. Instead we must set
-  				// up a secondary texture to write the result to, then copy it back to the
-  				// proper mipmap level.
-  				texelSize.set( 1.0 / width, 1.0 / height );
-  				if ( mip == 0 ) texelSize.set( 0.0, 0.0 );
-
-  				_tempTarget.viewport.set( position.x, position.y, width, height );
-  				_tempTarget.scissor.set( position.x, position.y, width, height );
-  				_renderer.setRenderTarget( _tempTarget );
-  				_renderer.render( _scene, _flatCamera );
-  				_renderer.copyFramebufferToTexture( position, material.roughnessMap, mip );
-  				_mipmapMaterial.uniforms.roughnessMap.value = material.roughnessMap;
-
-  			}
-
-  			if ( roughnessMap !== material.roughnessMap ) roughnessMap.dispose();
-
-  			_renderer.setRenderTarget( oldTarget );
-  			_renderer.autoClear = autoClear;
-
-  		},
-
-  		dispose: function ( ) {
-
-  			_mipmapMaterial.dispose();
-  			_scene.children[ 0 ].geometry.dispose();
-  			if ( _tempTarget != null ) _tempTarget.dispose();
-
-  		}
-
-  	};
-
-  	function _getMipmapMaterial() {
-
-  		var shaderMaterial = new RawShaderMaterial( {
-
-  			uniforms: {
-  				roughnessMap: { value: null },
-  				normalMap: { value: null },
-  				texelSize: { value: new Vector2( 1, 1 ) }
-  			},
-
-  			vertexShader: `
-precision mediump float;
-precision mediump int;
-attribute vec3 position;
-attribute vec2 uv;
-varying vec2 vUv;
-void main() {
-    vUv = uv;
-    gl_Position = vec4( position, 1.0 );
-}
-              `,
-
-  			fragmentShader: `
-precision mediump float;
-precision mediump int;
-varying vec2 vUv;
-uniform sampler2D roughnessMap;
-uniform sampler2D normalMap;
-uniform vec2 texelSize;
-
-#define ENVMAP_TYPE_CUBE_UV
-vec4 envMapTexelToLinear(vec4 a){return a;}
-#include <cube_uv_reflection_fragment>
-
-float roughnessToVariance(float roughness) {
-  float variance = 0.0;
-  if (roughness >= r1) {
-    variance = (r0 - roughness) * (v1 - v0) / (r0 - r1) + v0;
-  } else if (roughness >= r4) {
-    variance = (r1 - roughness) * (v4 - v1) / (r1 - r4) + v1;
-  } else if (roughness >= r5) {
-    variance = (r4 - roughness) * (v5 - v4) / (r4 - r5) + v4;
-  } else {
-    float roughness2 = roughness * roughness;
-    variance = 1.79 * roughness2 * roughness2;
-  }
-  return variance;
-}
-float varianceToRoughness(float variance) {
-  float roughness = 0.0;
-  if (variance >= v1) {
-    roughness = (v0 - variance) * (r1 - r0) / (v0 - v1) + r0;
-  } else if (variance >= v4) {
-    roughness = (v1 - variance) * (r4 - r1) / (v1 - v4) + r1;
-  } else if (variance >= v5) {
-    roughness = (v4 - variance) * (r5 - r4) / (v4 - v5) + r4;
-  } else {
-    roughness = pow(0.559 * variance, 0.25);// 0.559 = 1.0 / 1.79
-  }
-  return roughness;
-}
-
-void main() {
-    gl_FragColor = texture2D(roughnessMap, vUv, -1.0);
-    if (texelSize.x == 0.0) return;
-    float roughness = gl_FragColor.g;
-    float variance = roughnessToVariance(roughness);
-    vec3 avgNormal;
-    for (float x = -1.0; x < 2.0; x += 2.0) {
-    for (float y = -1.0; y < 2.0; y += 2.0) {
-        vec2 uv = vUv + vec2(x, y) * 0.25 * texelSize;
-        avgNormal += normalize(texture2D(normalMap, uv, -1.0).xyz - 0.5);
-    }
-    }
-    variance += 1.0 - 0.25 * length(avgNormal);
-    gl_FragColor.g = varianceToRoughness(variance);
-}
-              `,
-
-  			blending: NoBlending,
-  			depthTest: false,
-  			depthWrite: false
-
-  		} );
-
-  		shaderMaterial.type = 'RoughnessMipmapper';
-
-  		return shaderMaterial;
-
-  	}
-
-  	return RoughnessMipmapper;
-
-  } )();
-
   var DragPoint = function DragPoint() {
     this.x = 0;
     this.y = 0;
@@ -55155,6 +54317,32 @@ void main() {
     return Rect;
   }();
 
+  var RgbeLoader = /*#__PURE__*/function () {
+    function RgbeLoader() {}
+
+    RgbeLoader.load = function load(item, renderer, callback) {
+      return this.loadRgbeBackground(BASE_HREF + environment.paths.textures + item.envMapFolder, item.envMapFile, renderer, callback);
+    };
+
+    RgbeLoader.loadRgbeBackground = function loadRgbeBackground(path, file, renderer, callback) {
+      var pmremGenerator = new THREE.PMREMGenerator(renderer);
+      pmremGenerator.compileEquirectangularShader();
+      var loader = new RGBELoader();
+      loader.setDataType(THREE.UnsignedByteType).setPath(path).load(file, function (texture) {
+        var envMap = pmremGenerator.fromEquirectangular(texture).texture; // texture.dispose();
+
+        pmremGenerator.dispose();
+
+        if (typeof callback === 'function') {
+          callback(envMap, texture);
+        }
+      });
+      return loader;
+    };
+
+    return RgbeLoader;
+  }();
+
   var ModelViewerComponent = /*#__PURE__*/function (_Component) {
     _inheritsLoose(ModelViewerComponent, _Component);
 
@@ -55166,7 +54354,9 @@ void main() {
 
     _proto.onInit = function onInit() {
       console.log('ModelViewerComponent.onInit');
+      this.item_ = null;
       this.items = [];
+      this.index = 0;
       this.createScene();
       this.addListeners(); // this.animate(); // !!! no
     } // onView() { const context = getContext(this); }
@@ -55226,13 +54416,21 @@ void main() {
       this.drag$().pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (event) {// console.log('dragService', event);
       });
       var scene = this.scene = new THREE.Scene();
+      var geometry = new THREE.SphereBufferGeometry(500, 60, 40); // invert the geometry on the x-axis so that all of the faces point inward
+
+      geometry.scale(-1, 1, 1);
+      var material = new THREE.MeshBasicMaterial();
+      var panorama = this.panorama = new THREE.Mesh(geometry, material);
+      scene.add(panorama);
       var objects = this.objects = new THREE.Group();
       scene.add(objects);
-      var light = new THREE.DirectionalLight(0xffffff, 0.5);
+      /*
+      const light = new THREE.DirectionalLight(0xffffff, 0.5);
       light.position.set(0, 2, 2);
       light.target.position.set(0, 0, 0);
       scene.add(light);
-      this.index = 0;
+      */
+
       this.resize();
     };
 
@@ -55247,6 +54445,8 @@ void main() {
           rotation = group.rotation.clone();
         } else if (event instanceof DragMoveEvent) {
           group.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01, 0);
+
+          _this.panorama.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01 + Math.PI, 0);
 
           _this.render();
 
@@ -55374,11 +54574,36 @@ void main() {
       object.position.set(tx, -ty, 0); // console.log(tx, -ty, 0);
     };
 
+    _createClass(ModelViewerComponent, [{
+      key: "item",
+      set: function set(item) {
+        var _this2 = this;
+
+        if (this.item_ !== item) {
+          this.item_ = item;
+
+          if (item) {
+            RgbeLoader.load(item, this.renderer, function (envMap, texture) {
+              // this.scene.background = envMap;
+              _this2.scene.environment = envMap;
+              _this2.panorama.material.map = texture;
+              _this2.panorama.material.needsUpdate = true;
+
+              _this2.render();
+            });
+          }
+        }
+      },
+      get: function get() {
+        return this.item_;
+      }
+    }]);
+
     return ModelViewerComponent;
   }(rxcomp.Component);
   ModelViewerComponent.meta = {
     selector: '[model-viewer]',
-    inputs: ['items'],
+    inputs: ['items', 'item'],
     outputs: ['change', 'rotate']
   };
 
@@ -55519,24 +54744,37 @@ void main() {
     };
 
     _proto.create = function create(callback) {
-      var _this = this;
+      this.loadGltfModel(BASE_HREF + environment.paths.models + this.item.gltfFolder, this.item.gltfFile, function (mesh) {
+        var box = new THREE.Box3().setFromObject(mesh);
+        var center = box.getCenter(new THREE.Vector3());
+        mesh.position.x += mesh.position.x - center.x;
+        mesh.position.y += mesh.position.y - center.y;
+        mesh.position.z += mesh.position.z - center.z;
+        var size = box.max.clone().sub(box.min).length();
+        var scale = 2.5 / size;
+        mesh.scale.set(scale, scale, scale);
 
-      this.loadRgbeBackground(BASE_HREF + environment.paths.textures + this.item.envMapFolder, this.item.envMapFile, function (envMap) {
-        _this.loadGltfModel(BASE_HREF + environment.paths.models + _this.item.gltfFolder, _this.item.gltfFile, function (mesh) {
-          var box = new THREE.Box3().setFromObject(mesh);
-          var center = box.getCenter(new THREE.Vector3());
-          mesh.position.x += mesh.position.x - center.x;
-          mesh.position.y += mesh.position.y - center.y;
-          mesh.position.z += mesh.position.z - center.z;
-          var size = box.max.clone().sub(box.min).length();
-          var scale = 2.5 / size;
-          mesh.scale.set(scale, scale, scale);
-
-          if (typeof callback === 'function') {
-            callback(mesh);
-          }
-        });
+        if (typeof callback === 'function') {
+          callback(mesh);
+        }
       });
+      /*
+      this.loadRgbeBackground(BASE_HREF + environment.paths.textures + this.item.envMapFolder, this.item.envMapFile, (envMap) => {
+      	this.loadGltfModel(BASE_HREF + environment.paths.models + this.item.gltfFolder, this.item.gltfFile, (mesh) => {
+      		const box = new THREE.Box3().setFromObject(mesh);
+      		const center = box.getCenter(new THREE.Vector3());
+      		mesh.position.x += (mesh.position.x - center.x);
+      		mesh.position.y += (mesh.position.y - center.y);
+      		mesh.position.z += (mesh.position.z - center.z);
+      		const size = box.max.clone().sub(box.min).length();
+      		const scale = 2.5 / size;
+      		mesh.scale.set(scale, scale, scale);
+      		if (typeof callback === 'function') {
+      			callback(mesh);
+      		}
+      	});
+      });
+      */
     } // onView() { const context = getContext(this); }
     // onChanges() {}
 
@@ -55554,7 +54792,7 @@ void main() {
     ;
 
     _proto.loadRgbeBackground = function loadRgbeBackground(path, file, callback) {
-      var _this2 = this;
+      var _this = this;
 
       var scene = this.host.scene;
       var renderer = this.host.renderer;
@@ -55562,11 +54800,11 @@ void main() {
       pmremGenerator.compileEquirectangularShader();
       var loader = new RGBELoader();
       loader.setDataType(THREE.UnsignedByteType).setPath(path).load(file, function (texture) {
-        var envMap = pmremGenerator.fromEquirectangular(texture).texture; // scene.background = envMap;
-
+        var envMap = pmremGenerator.fromEquirectangular(texture).texture;
+        scene.background = envMap;
         scene.environment = envMap;
 
-        _this2.host.render();
+        _this.host.render();
 
         texture.dispose();
         pmremGenerator.dispose();
@@ -55579,22 +54817,18 @@ void main() {
     };
 
     _proto.loadGltfModel = function loadGltfModel(path, file, callback) {
-      var renderer = this.host.renderer;
-      var roughnessMipmapper = new RoughnessMipmapper(renderer); // optional
+      var renderer = this.host.renderer; // const roughnessMipmapper = new RoughnessMipmapper(renderer); // optional
 
       var loader = new GLTFLoader().setPath(path);
       loader.load(file, function (gltf) {
         gltf.scene.traverse(function (child) {
-          if (child.isMesh) {
-            roughnessMipmapper.generateMipmaps(child.material);
-          }
+          if (child.isMesh) ;
         });
 
         if (typeof callback === 'function') {
           callback(gltf.scene);
-        }
+        } // roughnessMipmapper.dispose();
 
-        roughnessMipmapper.dispose();
       });
     };
 

@@ -30,9 +30,9 @@
 	</div>
 
 	<div class="ui__body">
-		<div class="model-viewer" model-viewer [items]="items" (change)="onChange($event)" (rotate)="onRotate($event)">
+		<div class="model-viewer" model-viewer [item]="item" [items]="items" (change)="onChange($event)" (rotate)="onRotate($event)">
 			<div class="model-viewer__view">
-				<!-- slider -->
+				<!-- SLIDER -->
 				<div class="slider-container" slider [items]="items" (tween)="onTween($event)" (change)="onChange($event)" *if="items.length">
 					<div class="slider-inner">
 						<div class="slider-slide" *for="let item of items; let index = index;">
@@ -72,23 +72,23 @@
 
 	<div class="ui__foot">
 		<div class="left">
-			<a class="btn--ar" [href]="item?.ar" download *if="item?.ar">
-				<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#ar"></use></svg> <span>View in AR</span>
-			</a>
-			<!-- <span *if="!item?.ar">&nbsp;</span> -->
-		</div>
-		<div class="center">
 			<div class="group--controls">
-				<button type="button" class="btn--cam" [class]="{ active: state.cameraMuted }" (click)="toggleCamera()">
-					<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#cam"></use></svg>
-				</button>
 				<button type="button" class="btn--call" (click)="disconnect()">
 					<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#call"></use></svg>
+				</button>
+				<button type="button" class="btn--cam" [class]="{ active: state.cameraMuted }" (click)="toggleCamera()">
+					<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#cam"></use></svg>
 				</button>
 				<button type="button" class="btn--mic" [class]="{ active: state.audioMuted }" (click)="toggleAudio()">
 					<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#mic"></use></svg>
 				</button>
 			</div>
+		</div>
+		<div class="center">
+			<a class="btn--ar" [href]="item?.ar" download *if="item?.ar">
+				<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#ar"></use></svg> <span>Try in AR</span>
+			</a>
+			<!-- <span *if="!item?.ar">&nbsp;</span> -->
 		</div>
 		<div class="right">
 			<button type="button" class="btn--heart" [class]="{ active: item?.added }" (click)="addToWishlist($event)">

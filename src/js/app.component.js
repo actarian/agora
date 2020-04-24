@@ -10,7 +10,7 @@ import ModalService, { ModalResolveEvent } from './modal/modal.service';
 
 const CONTROL_REQUEST = BASE_HREF + 'control-request.html';
 
-const DEBUG = false;
+const DEBUG = true;
 
 export class AppComponent extends Component {
 
@@ -44,9 +44,7 @@ export class AppComponent extends Component {
 			cameraMuted: false,
 			audioMuted: false,
 		};
-		if (DEBUG) {
-			this.state.connected = true;
-		} else {
+		if (!DEBUG) {
 			this.agora = new AgoraService(this.state);
 			this.state = this.agora.state;
 			this.agora.message$.pipe(
@@ -59,6 +57,8 @@ export class AppComponent extends Component {
 						break;
 				}
 			});
+		} else {
+			this.state.connected = true;
 		}
 		this.loadData();
 	}
@@ -80,14 +80,11 @@ export class AppComponent extends Component {
 
 	initForm() {
 		const data = this.data;
-
 		const form = this.form = new FormGroup({
 			product: new FormControl(data.products[0].id, Validators.RequiredValidator()),
 		});
-
 		const controls = this.controls = form.controls;
 		controls.product.options = data.products;
-
 		form.changes$.pipe(
 			takeUntil(this.unsubscribe$)
 		).subscribe((changes) => {
@@ -122,7 +119,7 @@ export class AppComponent extends Component {
 
 	disconnect() {
 		this.state.connecting = false;
-		if (this.agora) {
+		if (!DEBUG) {
 			this.agora.leaveChannel();
 		} else {
 			this.state.connected = false;
@@ -131,7 +128,7 @@ export class AppComponent extends Component {
 	}
 
 	onChange(index) {
-		if (this.agora && this.state.control) {
+		if (!DEBUG && this.state.control) {
 			this.agora.sendMessage({
 				type: MessageType.SlideChange,
 				index
@@ -140,7 +137,7 @@ export class AppComponent extends Component {
 	}
 
 	onRotate(coords) {
-		if (this.agora && this.state.control) {
+		if (!DEBUG && this.state.control) {
 			this.agora.sendMessage({
 				type: MessageType.SlideRotate,
 				coords
@@ -159,7 +156,7 @@ export class AppComponent extends Component {
 				message.type = MessageType.RequestControlRejected;
 				this.state.locked = false;
 			}
-			if (this.agora) {
+			if (!DEBUG) {
 				this.agora.sendMessage(message);
 			}
 			this.pushChanges();
@@ -189,24 +186,22 @@ export class AppComponent extends Component {
 	// onDestroy() {}
 
 	toggleCamera() {
-		if (this.agora) {
+		if (!DEBUG) {
 			this.agora.toggleCamera();
 		}
 	}
 
 	toggleAudio() {
-		if (this.agora) {
+		if (!DEBUG) {
 			this.agora.toggleAudio();
 		}
 	}
 
 	toggleControl() {
-		if (DEBUG) {
-			this.onRemoteControlRequest({});
+		if (!DEBUG) {
+			this.agora.toggleControl();
 		} else {
-			if (this.agora) {
-				this.agora.toggleControl();
-			}
+			this.onRemoteControlRequest({});
 		}
 	}
 

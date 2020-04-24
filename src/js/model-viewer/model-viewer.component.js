@@ -4,12 +4,34 @@ import * as THREE from 'three';
 import { DragDownEvent, DragMoveEvent, DragService, DragUpEvent } from '../drag/drag.service';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Rect } from '../rect/rect';
+import { RgbeLoader } from './rgbe.loader';
 
 export class ModelViewerComponent extends Component {
 
+	set item(item) {
+		if (this.item_ !== item) {
+			this.item_ = item;
+			if (item) {
+				RgbeLoader.load(item, this.renderer, (envMap, texture) => {
+					// this.scene.background = envMap;
+					this.scene.environment = envMap;
+					this.panorama.material.map = texture;
+					this.panorama.material.needsUpdate = true;
+					this.render();
+				});
+			}
+		}
+	}
+
+	get item() {
+		return this.item_;
+	}
+
 	onInit() {
 		console.log('ModelViewerComponent.onInit');
+		this.item_ = null;
 		this.items = [];
+		this.index = 0;
 		this.createScene();
 		this.addListeners();
 		// this.animate(); // !!! no
@@ -71,15 +93,22 @@ export class ModelViewerComponent extends Component {
 
 		const scene = this.scene = new THREE.Scene();
 
+		const geometry = new THREE.SphereBufferGeometry(500, 60, 40);
+		// invert the geometry on the x-axis so that all of the faces point inward
+		geometry.scale(-1, 1, 1);
+		const material = new THREE.MeshBasicMaterial();
+		const panorama = this.panorama = new THREE.Mesh(geometry, material);
+		scene.add(panorama);
+
 		const objects = this.objects = new THREE.Group();
 		scene.add(objects);
 
+		/*
 		const light = new THREE.DirectionalLight(0xffffff, 0.5);
 		light.position.set(0, 2, 2);
 		light.target.position.set(0, 0, 0);
 		scene.add(light);
-
-		this.index = 0;
+		*/
 
 		this.resize();
 	}
@@ -93,6 +122,7 @@ export class ModelViewerComponent extends Component {
 					rotation = group.rotation.clone();
 				} else if (event instanceof DragMoveEvent) {
 					group.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01, 0);
+					this.panorama.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01 + Math.PI, 0);
 					this.render();
 					this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
 				} else if (event instanceof DragUpEvent) {
@@ -234,6 +264,6 @@ export class ModelViewerComponent extends Component {
 
 ModelViewerComponent.meta = {
 	selector: '[model-viewer]',
-	inputs: ['items'],
+	inputs: ['items', 'item'],
 	outputs: ['change', 'rotate'],
 };
