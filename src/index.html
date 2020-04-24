@@ -101,7 +101,8 @@
 	</div>
 
 	<div class="ui__lock" (mousedown)="onPrevent($event)" (touchstart)="onPrevent($event)" *if="state.locked"></div>
-	<div class="ui__lock" *if="state.control"></div>
+	<div class="ui__lock control" *if="state.control"></div>
+	<div class="ui__lock control"></div>
 
 </div>
 

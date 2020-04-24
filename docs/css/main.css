@@ -3518,6 +3518,8 @@ body {
   height: 100%;
   border: #ff4332 solid 5px;
   z-index: 2; }
+  .ui__lock.control {
+    pointer-events: none; }
 
 .group--controls {
   display: flex;

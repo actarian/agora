@@ -309,11 +309,11 @@ export class ModelViewerComponent extends Component {
 			).subscribe(message => {
 				switch (message.type) {
 					case MessageType.SlideRotate:
-						console.log(message);
 						if (agora.state.locked && message.coords) {
 							const group = this.objects.children[this.index];
 							group.rotation.set(message.coords[0], message.coords[1], message.coords[2]);
 							this.panorama.rotation.set(message.coords[0], message.coords[1] + Math.PI, message.coords[2]);
+							this.render();
 						}
 						/*
 						const group = this.objects.children[this.index];

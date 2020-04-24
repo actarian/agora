@@ -44,6 +44,7 @@ export default class AgoraService extends Emittable {
 		this.onStreamSubscribed = this.onStreamSubscribed.bind(this);
 		this.onStreamRemoved = this.onStreamRemoved.bind(this);
 		this.onPeerLeaved = this.onPeerLeaved.bind(this);
+		this.onConnectionStateChange = this.onConnectionStateChange.bind(this);
 		this.onTokenPrivilegeWillExpire = this.onTokenPrivilegeWillExpire.bind(this);
 		this.onTokenPrivilegeDidExpire = this.onTokenPrivilegeDidExpire.bind(this);
 		this.onMessage = this.onMessage.bind(this);
@@ -114,6 +115,7 @@ export default class AgoraService extends Emittable {
 		client.on('error', this.onError);
 		// Occurs when the peer user leaves the channel; for example, the peer user calls Client.leave.
 		client.on('peer-leave', this.onPeerLeaved);
+		client.on('connection-state-change', this.onConnectionStateChange);
 		client.on('stream-removed', this.onStreamRemoved);
 		client.on('onTokenPrivilegeWillExpire', this.onTokenPrivilegeWillExpire);
 		client.on('onTokenPrivilegeDidExpire', this.onTokenPrivilegeDidExpire);
@@ -488,6 +490,10 @@ export default class AgoraService extends Emittable {
 		} else {
 			this.setState({ local: null, locked: false, control: false });
 		}
+	}
+
+	onConnectionStateChange(event) {
+		console.log('AgoraService.onConnectionStateChange', event);
 	}
 
 	onTokenPrivilegeWillExpire(event) {
