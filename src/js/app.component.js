@@ -92,7 +92,7 @@ export class AppComponent extends Component {
 				this.items = product ? product.items : [];
 				this.item = product;
 				this.pushChanges();
-				if (this.agora.state.control) {
+				if (!DEBUG && this.agora.state.control) {
 					this.agora.sendMessage({
 						type: MessageType.MenuNavTo,
 						id: product.id,
