@@ -309,12 +309,12 @@ export default class AgoraService extends Emittable {
 
 	toggleControl() {
 		if (this.state.control) {
-			this.sendRemoteControlDismiss((control) => {
+			this.sendRemoteControlDismiss().then((control) => {
 				console.log('AgoraService.sendRemoteControlDismiss', control);
 				this.setState({ control: !control });
 			});
 		} else {
-			this.sendRemoteControlRequest((control) => {
+			this.sendRemoteControlRequest().then((control) => {
 				console.log('AgoraService.sendRemoteControlRequest', control);
 				this.setState({ control: control });
 			});
@@ -333,14 +333,11 @@ export default class AgoraService extends Emittable {
 		});
 	}
 
-	sendRemoteControlDismiss(message) {
+	sendRemoteControlDismiss() {
 		return new Promise((resolve, reject) => {
 			this.sendMessage({
 				type: MessageType.RequestControlDismiss,
 				rpcid: Date.now().toString(),
-				payload: {
-					message
-				},
 			}).then((message) => {
 				console.log('AgoraService.sendRemoteControlDismiss return', message);
 				if (message.type === MessageType.RequestControlDismissed) {
@@ -357,9 +354,6 @@ export default class AgoraService extends Emittable {
 			this.sendMessage({
 				type: MessageType.RequestControl,
 				rpcid: Date.now().toString(),
-				payload: {
-					message
-				},
 			}).then((message) => {
 				console.log('AgoraService.sendRemoteControlRequest return', message);
 				if (message.type === MessageType.RequestControlAccepted) {
@@ -420,11 +414,9 @@ export default class AgoraService extends Emittable {
 				case MessageType.RequestControlDismiss:
 					this.setState({ locked: false });
 					this.sendMessage({
-						type: MessageType.RequestControlDismissed
+						type: MessageType.RequestControlDismissed,
+						rpcid: message.rpcid
 					});
-					break;
-				case MessageType.RequestControlDismissed:
-					this.setState({ control: false });
 					break;
 			}
 			/*

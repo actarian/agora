@@ -577,7 +577,7 @@
       var _this9 = this;
 
       if (this.state.control) {
-        this.sendRemoteControlDismiss(function (control) {
+        this.sendRemoteControlDismiss().then(function (control) {
           console.log('AgoraService.sendRemoteControlDismiss', control);
 
           _this9.setState({
@@ -585,7 +585,7 @@
           });
         });
       } else {
-        this.sendRemoteControlRequest(function (control) {
+        this.sendRemoteControlRequest().then(function (control) {
           console.log('AgoraService.sendRemoteControlRequest', control);
 
           _this9.setState({
@@ -608,16 +608,13 @@
       });
     };
 
-    _proto.sendRemoteControlDismiss = function sendRemoteControlDismiss(message) {
+    _proto.sendRemoteControlDismiss = function sendRemoteControlDismiss() {
       var _this10 = this;
 
       return new Promise(function (resolve, reject) {
         _this10.sendMessage({
           type: MessageType.RequestControlDismiss,
-          rpcid: Date.now().toString(),
-          payload: {
-            message: message
-          }
+          rpcid: Date.now().toString()
         }).then(function (message) {
           console.log('AgoraService.sendRemoteControlDismiss return', message);
 
@@ -636,10 +633,7 @@
       return new Promise(function (resolve, reject) {
         _this11.sendMessage({
           type: MessageType.RequestControl,
-          rpcid: Date.now().toString(),
-          payload: {
-            message: message
-          }
+          rpcid: Date.now().toString()
         }).then(function (message) {
           console.log('AgoraService.sendRemoteControlRequest return', message);
 
@@ -704,13 +698,8 @@
               locked: false
             });
             this.sendMessage({
-              type: MessageType.RequestControlDismissed
-            });
-            break;
-
-          case MessageType.RequestControlDismissed:
-            this.setState({
-              control: false
+              type: MessageType.RequestControlDismissed,
+              rpcid: message.rpcid
             });
             break;
         }
