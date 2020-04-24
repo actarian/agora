@@ -1005,7 +1005,7 @@
 
             case MessageType.MenuNavTo:
               if (agora.state.locked && message.id) {
-                _this.controls.get('product').value = message.id;
+                _this.controls.product.value = message.id;
               }
 
               break;

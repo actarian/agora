@@ -41,7 +41,7 @@ export class AppComponent extends Component {
 						break;
 					case MessageType.MenuNavTo:
 						if (agora.state.locked && message.id) {
-							this.controls.get('product').value = message.id;
+							this.controls.product.value = message.id;
 						}
 						break;
 				}
