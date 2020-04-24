@@ -282,11 +282,13 @@ export default class AgoraService extends Emittable {
 	toggleCamera() {
 		const local = this.local;
 		console.log('toggleCamera', local);
-		if (local) {
-			if (local.video) {
-				local.muteVideo();
-			} else {
+		if (local && local.video) {
+			if (local.userMuteVideo) {
 				local.unmuteVideo();
+				this.setState({ cameraMuted: false });
+			} else {
+				local.muteVideo();
+				this.setState({ cameraMuted: true });
 			}
 		}
 	}
@@ -294,11 +296,13 @@ export default class AgoraService extends Emittable {
 	toggleAudio() {
 		const local = this.local;
 		console.log(local);
-		if (local) {
-			if (local.audio) {
-				local.muteAudio();
-			} else {
+		if (local && local.audio) {
+			if (local.userMuteAudio) {
 				local.unmuteAudio();
+				this.setState({ audioMuted: false });
+			} else {
+				local.muteAudio();
+				this.setState({ audioMuted: true });
 			}
 		}
 	}
@@ -306,10 +310,12 @@ export default class AgoraService extends Emittable {
 	toggleControl() {
 		if (this.control) {
 			this.sendRemoteControlDismiss((control) => {
+				console.log('sendRemoteControlDismiss', control);
 				this.setState({ control: !control });
 			});
 		} else {
 			this.sendRemoteControlRequest((control) => {
+				console.log('sendRemoteControlRequest', control);
 				this.setState({ control: control });
 			});
 		}
@@ -403,7 +409,7 @@ export default class AgoraService extends Emittable {
 	onMessage(data, uid) {
 		if (uid !== this.uid) {
 			const message = JSON.parse(data.text);
-			console.log('wrc: receive', message);
+			// console.log('wrc: receive', message);
 			if (message.rpcid) {
 				this.emit(`message-${message.rpcid}`, message);
 			}

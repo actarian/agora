@@ -34,16 +34,22 @@ export class AppComponent extends Component {
 			agora.message$.pipe(
 				takeUntil(this.unsubscribe$)
 			).subscribe(message => {
-				console.log('message', message);
+				console.log('AppComponent.message', message);
 				switch (message.type) {
 					case MessageType.RequestControl:
 						this.onRemoteControlRequest(message);
+						break;
+					case MessageType.MenuNavTo:
+						if (agora.state.locked && message.id) {
+							this.controls.get('product').value = message.id;
+						}
 						break;
 				}
 			});
 			agora.state$.pipe(
 				takeUntil(this.unsubscribe$)
 			).subscribe(state => {
+				console.log('AppComponent.state', state);
 				this.state = state;
 				this.pushChanges();
 			});
@@ -86,6 +92,12 @@ export class AppComponent extends Component {
 				this.items = product ? product.items : [];
 				this.item = product;
 				this.pushChanges();
+				if (this.agora.state.control) {
+					this.agora.sendMessage({
+						type: MessageType.MenuNavTo,
+						id: product.id,
+					});
+				}
 			}, 1);
 		});
 	}

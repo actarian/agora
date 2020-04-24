@@ -202,7 +202,11 @@ export class ModelViewerComponent extends Component {
 					group.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01, 0);
 					this.panorama.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01 + Math.PI, 0);
 					this.render();
-					this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
+					// this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
+					agora.sendMessage({
+						type: MessageType.SlideRotate,
+						coords: [group.rotation.x, group.rotation.y, group.rotation.z]
+					});
 				} else if (event instanceof DragUpEvent) {
 
 				}
@@ -297,13 +301,31 @@ export class ModelViewerComponent extends Component {
 		// this.controls.addEventListener('change', this.render); // use if there is no animation loop
 		window.addEventListener('resize', this.resize, false);
 		if (!DEBUG) {
-			const agora = AgoraService.getSingleton();
+			const agora = this.agora = AgoraService.getSingleton();
 			agora.message$.pipe(
 				takeUntil(this.unsubscribe$)
 			).subscribe(message => {
 				switch (message.type) {
 					case MessageType.SlideRotate:
 						console.log(message);
+						if (agora.state.locked && message.coords) {
+							const group = this.objects.children[this.index];
+							group.rotation.set(message.coords[0], message.coords[1], message.coords[2]);
+							this.panorama.rotation.set(message.coords[0], message.coords[1] + Math.PI, message.coords[2]);
+						}
+						/*
+						const group = this.objects.children[this.index];
+						if (event instanceof DragDownEvent) {
+							rotation = group.rotation.clone();
+						} else if (event instanceof DragMoveEvent) {
+							group.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01, 0);
+							this.panorama.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01 + Math.PI, 0);
+							this.render();
+							this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
+						} else if (event instanceof DragUpEvent) {
+
+						}
+						*/
 						break;
 				}
 			});

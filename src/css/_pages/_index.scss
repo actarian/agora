@@ -291,8 +291,12 @@ body {
 .btn--cam,
 .btn--mic {
 	&.disabled {
-		opacity: 0.2;
+		display: none;
 		pointer-events: none;
+	}
+
+	&.muted {
+		opacity: 0.2;
 	}
 }
 

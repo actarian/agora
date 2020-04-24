@@ -3642,8 +3642,12 @@ body {
 
 .btn--cam.disabled,
 .btn--mic.disabled {
-  opacity: 0.2;
+  display: none;
   pointer-events: none; }
+
+.btn--cam.muted,
+.btn--mic.muted {
+  opacity: 0.2; }
 
 .video--local.disabled,
 .video--remote.disabled {

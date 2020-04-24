@@ -539,11 +539,17 @@
       var local = this.local;
       console.log('toggleCamera', local);
 
-      if (local) {
-        if (local.video) {
-          local.muteVideo();
-        } else {
+      if (local && local.video) {
+        if (local.userMuteVideo) {
           local.unmuteVideo();
+          this.setState({
+            cameraMuted: false
+          });
+        } else {
+          local.muteVideo();
+          this.setState({
+            cameraMuted: true
+          });
         }
       }
     };
@@ -552,11 +558,17 @@
       var local = this.local;
       console.log(local);
 
-      if (local) {
-        if (local.audio) {
-          local.muteAudio();
-        } else {
+      if (local && local.audio) {
+        if (local.userMuteAudio) {
           local.unmuteAudio();
+          this.setState({
+            audioMuted: false
+          });
+        } else {
+          local.muteAudio();
+          this.setState({
+            audioMuted: true
+          });
         }
       }
     };
@@ -566,12 +578,16 @@
 
       if (this.control) {
         this.sendRemoteControlDismiss(function (control) {
+          console.log('sendRemoteControlDismiss', control);
+
           _this9.setState({
             control: !control
           });
         });
       } else {
         this.sendRemoteControlRequest(function (control) {
+          console.log('sendRemoteControlRequest', control);
+
           _this9.setState({
             control: control
           });
@@ -670,8 +686,7 @@
 
     _proto.onMessage = function onMessage(data, uid) {
       if (uid !== this.uid) {
-        var message = JSON.parse(data.text);
-        console.log('wrc: receive', message);
+        var message = JSON.parse(data.text); // console.log('wrc: receive', message);
 
         if (message.rpcid) {
           this.emit("message-" + message.rpcid, message);
@@ -963,16 +978,24 @@
         var agora = this.agora = AgoraService.getSingleton(this.state);
         this.state = agora.state;
         agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
-          console.log('message', message);
+          console.log('AppComponent.message', message);
 
           switch (message.type) {
             case MessageType.RequestControl:
               _this.onRemoteControlRequest(message);
 
               break;
+
+            case MessageType.MenuNavTo:
+              if (agora.state.locked && message.id) {
+                _this.controls.get('product').value = message.id;
+              }
+
+              break;
           }
         });
         agora.state$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (state) {
+          console.log('AppComponent.state', state);
           _this.state = state;
 
           _this.pushChanges();
@@ -1021,6 +1044,13 @@
           _this3.item = product;
 
           _this3.pushChanges();
+
+          if (_this3.agora.state.control) {
+            _this3.agora.sendMessage({
+              type: MessageType.MenuNavTo,
+              id: product.id
+            });
+          }
         }, 1);
       });
     };
@@ -55147,9 +55177,13 @@ vec4 envMapTexelToLinear(vec4 color) {
 
           _this2.panorama.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01 + Math.PI, 0);
 
-          _this2.render();
+          _this2.render(); // this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
 
-          _this2.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
+
+          agora.sendMessage({
+            type: MessageType.SlideRotate,
+            coords: [group.rotation.x, group.rotation.y, group.rotation.z]
+          });
         }
       }));
     };
@@ -55227,17 +55261,41 @@ vec4 envMapTexelToLinear(vec4 color) {
     };
 
     _proto.addListeners = function addListeners() {
+      var _this3 = this;
+
       this.resize = this.resize.bind(this);
       this.render = this.render.bind(this); // this.controls.addEventListener('change', this.render); // use if there is no animation loop
 
       window.addEventListener('resize', this.resize, false);
 
       {
-        var agora = AgoraService.getSingleton();
-        agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
+        var _agora = this.agora = AgoraService.getSingleton();
+
+        _agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
           switch (message.type) {
             case MessageType.SlideRotate:
               console.log(message);
+
+              if (_agora.state.locked && message.coords) {
+                var group = _this3.objects.children[_this3.index];
+                group.rotation.set(message.coords[0], message.coords[1], message.coords[2]);
+
+                _this3.panorama.rotation.set(message.coords[0], message.coords[1] + Math.PI, message.coords[2]);
+              }
+              /*
+              const group = this.objects.children[this.index];
+              if (event instanceof DragDownEvent) {
+              	rotation = group.rotation.clone();
+              } else if (event instanceof DragMoveEvent) {
+              	group.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01, 0);
+              	this.panorama.rotation.set(rotation.x + event.distance.y * 0.01, rotation.y + event.distance.x * 0.01 + Math.PI, 0);
+              	this.render();
+              	this.rotate.next([group.rotation.x, group.rotation.y, group.rotation.z]);
+              } else if (event instanceof DragUpEvent) {
+              	}
+              */
+
+
               break;
           }
         });
@@ -55249,6 +55307,7 @@ vec4 envMapTexelToLinear(vec4 color) {
         	this.pushChanges();
         });
         */
+
       }
     };
 
@@ -55629,6 +55688,8 @@ vec4 envMapTexelToLinear(vec4 color) {
     var _proto = SliderDirective.prototype;
 
     _proto.onInit = function onInit() {
+      var _this = this;
+
       var _getContext = rxcomp.getContext(this),
           node = _getContext.node;
 
@@ -55646,6 +55707,11 @@ vec4 envMapTexelToLinear(vec4 color) {
           switch (message.type) {
             case MessageType.SlideChange:
               console.log(message);
+
+              if (agora.state.locked && message.index !== undefined) {
+                _this.navTo(message.index);
+              }
+
               break;
           }
         });
@@ -55669,7 +55735,7 @@ vec4 envMapTexelToLinear(vec4 color) {
     };
 
     _proto.slider$ = function slider$() {
-      var _this = this;
+      var _this2 = this;
 
       var transformX = 0,
           transformY = 0,
@@ -55679,31 +55745,31 @@ vec4 envMapTexelToLinear(vec4 color) {
           initialTransformX;
       return DragService.events$(this.inner).pipe(operators.tap(function (event) {
         if (event instanceof DragDownEvent) {
-          var translation = _this.getTranslation(_this.inner, _this.container);
+          var translation = _this2.getTranslation(_this2.inner, _this2.container);
 
           initialTransformX = translation.x;
         } else if (event instanceof DragMoveEvent) {
-          _this.container.classList.add('dragging');
+          _this2.container.classList.add('dragging');
 
           distanceX = event.distance.x;
           distanceY = event.distance.y;
           transformX = initialTransformX + event.distance.x;
-          _this.inner.style.transform = "translate3d(" + transformX + "px, " + transformY + "px, " + transformZ + "px)";
+          _this2.inner.style.transform = "translate3d(" + transformX + "px, " + transformY + "px, " + transformZ + "px)";
         } else if (event instanceof DragUpEvent) {
-          _this.container.classList.remove('dragging');
+          _this2.container.classList.remove('dragging');
 
-          _this.inner.style.transform = null;
-          var width = _this.container.offsetWidth; // const index = Math.max(0, Math.min(this.items.length, Math.round(transformX * -1 / width)));
+          _this2.inner.style.transform = null;
+          var width = _this2.container.offsetWidth; // const index = Math.max(0, Math.min(this.items.length, Math.round(transformX * -1 / width)));
           // console.log(index);
           // zone
 
-          if (distanceX * -1 > width * 0.25 && _this.hasNext()) {
-            _this.navTo(_this.current + 1);
-          } else if (distanceX * -1 < width * -0.25 && _this.hasPrev()) {
-            _this.navTo(_this.current - 1);
+          if (distanceX * -1 > width * 0.25 && _this2.hasNext()) {
+            _this2.navTo(_this2.current + 1);
+          } else if (distanceX * -1 < width * -0.25 && _this2.hasPrev()) {
+            _this2.navTo(_this2.current - 1);
           } else {
-            _this.current = _this.current;
-            _this.inner.style.transform = "translate3d(" + -100 * _this.current + "%, 0, 0)"; // this.navTo(this.current);
+            _this2.current = _this2.current;
+            _this2.inner.style.transform = "translate3d(" + -100 * _this2.current + "%, 0, 0)"; // this.navTo(this.current);
           } // this.navTo(index);
 
         }
@@ -55711,7 +55777,7 @@ vec4 envMapTexelToLinear(vec4 color) {
     };
 
     _proto.tweenTo = function tweenTo(index, callback) {
-      var _this2 = this;
+      var _this3 = this;
 
       // console.log('tweenTo', index);
       var container = this.container;
@@ -55723,7 +55789,7 @@ vec4 envMapTexelToLinear(vec4 color) {
         ease: Power3.easeInOut,
         overwrite: 'all',
         onUpdate: function onUpdate() {
-          _this2.tween.next();
+          _this3.tween.next();
         },
         onComplete: function onComplete() {
           if (typeof callback === 'function') {
@@ -55734,14 +55800,14 @@ vec4 envMapTexelToLinear(vec4 color) {
     };
 
     _proto.navTo = function navTo(index) {
-      var _this3 = this;
+      var _this4 = this;
 
       this.tweenTo(index, function () {
-        _this3.current = index;
+        _this4.current = index;
 
-        _this3.pushChanges();
+        _this4.pushChanges();
 
-        _this3.change.next(_this3.current);
+        _this4.change.next(_this4.current);
       });
     };
 

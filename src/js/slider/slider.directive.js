@@ -35,6 +35,9 @@ export class SliderDirective extends Component {
 				switch (message.type) {
 					case MessageType.SlideChange:
 						console.log(message);
+						if (agora.state.locked && message.index !== undefined) {
+							this.navTo(message.index);
+						}
 						break;
 				}
 			});
