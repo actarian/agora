@@ -128,8 +128,9 @@ export default class AgoraService extends Emittable {
 		const uid = null;
 		token = null; // !!!
 		client.join(token, environment.channelName, uid, (uid) => {
+			this.uid = uid;
 			// console.log('User ' + uid + ' join channel successfully');
-			this.setState({ connected: true });
+			this.setState({ connected: true, uid: uid });
 			this.getRtmToken(uid).subscribe(token => {
 				// console.log('token', token);
 				this.joinMessageChannel(token.token, uid).then((success) => {

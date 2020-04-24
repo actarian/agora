@@ -353,9 +353,11 @@
       token = null; // !!!
 
       client.join(token, environment.channelName, uid, function (uid) {
-        // console.log('User ' + uid + ' join channel successfully');
+        _this4.uid = uid; // console.log('User ' + uid + ' join channel successfully');
+
         _this4.setState({
-          connected: true
+          connected: true,
+          uid: uid
         });
 
         _this4.getRtmToken(uid).subscribe(function (token) {
