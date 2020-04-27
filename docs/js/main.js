@@ -1017,6 +1017,8 @@
     };
 
     _proto.checkCamera = function checkCamera() {
+      var _this2 = this;
+
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({
           video: true,
@@ -1025,7 +1027,7 @@
           console.log('stream', stream);
 
           {
-            this.agora.patchState({
+            _this2.agora.patchState({
               mediaEnabled: true
             });
           }
@@ -1041,17 +1043,17 @@
     };
 
     _proto.loadData = function loadData() {
-      var _this2 = this;
+      var _this3 = this;
 
       HttpService.get$('./api/data.json').pipe(operators.first()).subscribe(function (data) {
-        _this2.data = data;
+        _this3.data = data;
 
-        _this2.initForm();
+        _this3.initForm();
       });
     };
 
     _proto.initForm = function initForm() {
-      var _this3 = this;
+      var _this4 = this;
 
       var data = this.data;
       var form = this.form = new rxcompForm.FormGroup({
@@ -1064,19 +1066,19 @@
         var product = data.products.find(function (x) {
           return x.id === changes.product;
         });
-        _this3.items = [];
-        _this3.item = null;
+        _this4.items = [];
+        _this4.item = null;
 
-        _this3.pushChanges();
+        _this4.pushChanges();
 
         setTimeout(function () {
-          _this3.items = product ? product.items : [];
-          _this3.item = product;
+          _this4.items = product ? product.items : [];
+          _this4.item = product;
 
-          _this3.pushChanges();
+          _this4.pushChanges();
 
-          if ( _this3.agora.state.control) {
-            _this3.agora.sendMessage({
+          if ( _this4.agora.state.control) {
+            _this4.agora.sendMessage({
               type: MessageType.MenuNavTo,
               id: product.id
             });
@@ -1086,16 +1088,16 @@
     };
 
     _proto.connect = function connect() {
-      var _this4 = this;
+      var _this5 = this;
 
       if (!this.state.connecting) {
         this.state.connecting = true;
         this.pushChanges();
         setTimeout(function () {
-          _this4.agora.connect$().pipe(operators.takeUntil(_this4.unsubscribe$)).subscribe(function (state) {
-            _this4.state = Object.assign(_this4.state, state);
+          _this5.agora.connect$().pipe(operators.takeUntil(_this5.unsubscribe$)).subscribe(function (state) {
+            _this5.state = Object.assign(_this5.state, state);
 
-            _this4.pushChanges();
+            _this5.pushChanges();
           });
         }, 1000);
       }
@@ -1128,7 +1130,7 @@
     };
 
     _proto.onRemoteControlRequest = function onRemoteControlRequest(message) {
-      var _this5 = this;
+      var _this6 = this;
 
       ModalService.open$({
         src: CONTROL_REQUEST,
@@ -1136,17 +1138,17 @@
       }).pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (event) {
         if (event instanceof ModalResolveEvent) {
           message.type = MessageType.RequestControlAccepted;
-          _this5.state.locked = true;
+          _this6.state.locked = true;
         } else {
           message.type = MessageType.RequestControlRejected;
-          _this5.state.locked = false;
+          _this6.state.locked = false;
         }
 
         {
-          _this5.agora.sendMessage(message);
+          _this6.agora.sendMessage(message);
         }
 
-        _this5.pushChanges();
+        _this6.pushChanges();
       });
     };
 
