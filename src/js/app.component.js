@@ -29,9 +29,17 @@ export class AppComponent extends Component {
 					case MessageType.RequestControl:
 						this.onRemoteControlRequest(message);
 						break;
+					case MessageType.RequestControlAccepted:
+						agora.sendMessage({
+							type: MessageType.MenuNavTo,
+							id: this.item.id,
+						});
+						break;
 					case MessageType.MenuNavTo:
 						if (agora.state.locked && message.id) {
-							this.controls.product.value = message.id;
+							if (this.controls.product.value !== message.id) {
+								this.controls.product.value = message.id;
+							}
 						}
 						break;
 				}

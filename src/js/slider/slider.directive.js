@@ -34,10 +34,18 @@ export class SliderDirective extends Component {
 			).subscribe(message => {
 				switch (message.type) {
 					case MessageType.SlideChange:
-						console.log(message);
-						if (agora.state.locked && message.index !== undefined) {
+						// console.log(message);
+						if (agora.state.locked && message.index !== undefined && message.index) {
 							this.navTo(message.index);
 						}
+						break;
+					case MessageType.RequestControlAccepted:
+						setTimeout(() => {
+							agora.sendMessage({
+								type: MessageType.SlideChange,
+								index: this.current,
+							});
+						}, 500);
 						break;
 				}
 			});
@@ -113,17 +121,19 @@ export class SliderDirective extends Component {
 	}
 
 	navTo(index) {
-		this.tweenTo(index, () => {
-			this.current = index;
-			this.pushChanges();
-			this.change.next(this.current);
-			if (this.agora && this.agora.state.control) {
-				this.agora.sendMessage({
-					type: MessageType.SlideChange,
-					index: index
-				});
-			}
-		});
+		if (this.current !== index) {
+			this.tweenTo(index, () => {
+				this.current = index;
+				this.pushChanges();
+				this.change.next(this.current);
+				if (this.agora && this.agora.state.control) {
+					this.agora.sendMessage({
+						type: MessageType.SlideChange,
+						index: index
+					});
+				}
+			});
+		}
 	}
 
 	hasPrev() {
