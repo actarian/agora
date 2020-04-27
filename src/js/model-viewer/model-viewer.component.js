@@ -68,7 +68,11 @@ export class ModelViewerComponent extends Component {
 		camera.target = new THREE.Vector3();
 		camera.lookAt(camera.target);
 
-		const renderer = this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+		const renderer = this.renderer = new THREE.WebGLRenderer({
+			antialias: true,
+			alpha: true,
+			// physicallyCorrectLights: true,
+		});
 		renderer.setClearColor(0x000000, 0);
 		renderer.setPixelRatio(window.devicePixelRatio);
 		renderer.setSize(container.offsetWidth, container.offsetHeight);

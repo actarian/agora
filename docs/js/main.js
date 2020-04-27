@@ -55182,7 +55182,8 @@ vec4 envMapTexelToLinear(vec4 color) {
       camera.lookAt(camera.target);
       var renderer = this.renderer = new THREE.WebGLRenderer({
         antialias: true,
-        alpha: true
+        alpha: true // physicallyCorrectLights: true,
+
       });
       renderer.setClearColor(0x000000, 0);
       renderer.setPixelRatio(window.devicePixelRatio);
@@ -55672,17 +55673,20 @@ vec4 envMapTexelToLinear(vec4 color) {
 
         if (typeof callback === 'function') {
           callback(gltf.scene);
-        } // roughnessMipmapper.dispose();
+        }
+
+        _this2.progress = 0;
+
+        _this2.pushChanges(); // roughnessMipmapper.dispose();
 
       }, function (progressEvent) {
-        if (progressEvent.loaded && progressEvent.total) {
+        if (progressEvent.lengthComputable) {
           _this2.progress = Math.round(progressEvent.loaded / progressEvent.total * 100);
         } else {
           _this2.progress = _this2.progress || 0;
           _this2.progress = Math.min(100, _this2.progress + 1);
-        }
+        } // console.log('progressEvent', progressEvent.loaded, progressEvent.total);
 
-        console.log(progressEvent.loaded, progressEvent.total);
 
         _this2.pushChanges();
       });

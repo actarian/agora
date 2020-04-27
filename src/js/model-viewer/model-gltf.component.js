@@ -104,15 +104,17 @@ export class ModelGltfComponent extends ModelComponent {
 			if (typeof callback === 'function') {
 				callback(gltf.scene);
 			}
+			this.progress = 0;
+			this.pushChanges();
 			// roughnessMipmapper.dispose();
 		}, (progressEvent) => {
-			if (progressEvent.loaded && progressEvent.total) {
+			if (progressEvent.lengthComputable) {
 				this.progress = Math.round(progressEvent.loaded / progressEvent.total * 100);
 			} else {
 				this.progress = this.progress || 0;
 				this.progress = Math.min(100, this.progress + 1);
 			}
-			console.log(progressEvent.loaded, progressEvent.total);
+			// console.log('progressEvent', progressEvent.loaded, progressEvent.total);
 			this.pushChanges();
 		});
 	}

@@ -14,7 +14,7 @@
           "type": "gltf",
           "title": "modello 3d",
           "gltfFolder": "worn_brown_boots/",
-          "gltfFile": "worn_brown_boots.gltf"
+          "gltfFile": "worn_brown_boots.glb"
         },
         {
           "id": 32,
@@ -45,7 +45,7 @@
           "type": "gltf",
           "title": "modello 3d",
           "gltfFolder": "vintage_womens_boots_1280/",
-          "gltfFile": "vintage_womens_boots_1280.gltf"
+          "gltfFile": "vintage_womens_boots_1280.glb"
         },
         {
           "id": 42,
@@ -107,7 +107,38 @@
           "type": "gltf",
           "title": "modello 3d",
           "gltfFolder": "Mens_Oxford_Shoes/",
-          "gltfFile": "Mens_Oxford_Shoes.gltf"
+          "gltfFile": "Mens_Oxford_Shoes.glb"
+        },
+        {
+          "id": 22,
+          "type": "picture",
+          "title": "modello 3d",
+          "image": "./img/picture-02.jpg"
+        },
+        {
+          "id": 23,
+          "type": "text",
+          "title": "Titolo",
+          "abstract": "Abstract",
+          "description": "Lorem ipsum"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Helmet",
+      "likes": 372,
+      "added": false,
+      "ar": "models/Mens_Oxford_Shoes.usdz",
+      "envMapFolder": "equirectangular/",
+      "envMapFile": "leadenhall_market_2k.hdr",
+      "items": [
+        {
+          "id": 21,
+          "type": "gltf",
+          "title": "modello 3d",
+          "gltfFolder": "damaged-helmet/",
+          "gltfFile": "damaged-helmet.glb"
         },
         {
           "id": 22,
