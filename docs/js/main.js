@@ -1019,11 +1019,18 @@
     _proto.checkCamera = function checkCamera() {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({
-          video: true
+          video: true,
+          audio: true
         }).then(function (stream) {
-          console.log(stream);
-        }).catch(function (err0r) {
-          console.log("Something went wrong!");
+          console.log('stream', stream);
+
+          {
+            this.agora.patchState({
+              mediaEnabled: true
+            });
+          }
+        }).catch(function (error) {
+          console.log('media error', error);
         });
       }
     };

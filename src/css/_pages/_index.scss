@@ -87,6 +87,19 @@ body {
 	}
 }
 
+.group--info {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+	.info {
+		margin: 15px;
+		font-size: 15px;
+		color: #101010;
+	}
+}
+
 .group--controls {
 	display: flex;
 	justify-content: center;
@@ -173,6 +186,17 @@ body {
 	svg {
 		fill: white;
 		margin-right: 10px;
+	}
+
+	&.disabled {
+
+		&,
+		&:active,
+		&:focus,
+		&:hover,
+		&:visited {
+			background: gray;
+		}
 	}
 }
 

@@ -3521,6 +3521,16 @@ body {
   .ui__lock.control {
     pointer-events: none; }
 
+.group--info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; }
+  .group--info .info {
+    margin: 15px;
+    font-size: 15px;
+    color: #101010; }
+
 .group--controls {
   display: flex;
   justify-content: center;
@@ -3582,6 +3592,9 @@ body {
 .btn--connect svg {
   fill: white;
   margin-right: 10px; }
+
+.btn--connect.disabled, .btn--connect.disabled:active, .btn--connect.disabled:focus, .btn--connect.disabled:hover, .btn--connect.disabled:visited {
+  background: gray; }
 
 .video {
   border-radius: 12px;

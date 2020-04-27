@@ -60,10 +60,13 @@ export class AppComponent extends Component {
 
 	checkCamera() {
 		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-			navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
-				console.log(stream);
-			}).catch(function(err0r) {
-				console.log("Something went wrong!");
+			navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(function(stream) {
+				console.log('stream', stream);
+				if (!DEBUG) {
+					this.agora.patchState({ mediaEnabled: true });
+				}
+			}).catch(function(error) {
+				console.log('media error', error);
 			});
 		}
 	}
