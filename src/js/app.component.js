@@ -19,18 +19,8 @@ export class AppComponent extends Component {
 		this.items = [];
 		this.item = null;
 		this.form = null;
-		this.state = {
-			role: LocationService.get('role') || RoleType.Attendee,
-			connecting: false,
-			connected: false,
-			locked: false,
-			control: false,
-			cameraMuted: false,
-			audioMuted: false,
-		};
 		if (!DEBUG) {
-			const agora = this.agora = AgoraService.getSingleton(this.state);
-			this.state = agora.state;
+			const agora = this.agora = AgoraService.getSingleton();
 			agora.message$.pipe(
 				takeUntil(this.unsubscribe$)
 			).subscribe(message => {
@@ -54,9 +44,28 @@ export class AppComponent extends Component {
 				this.pushChanges();
 			});
 		} else {
-			this.state.connected = true;
+			this.state = {
+				role: LocationService.get('role') || RoleType.Attendee,
+				connecting: false,
+				connected: true,
+				locked: false,
+				control: false,
+				cameraMuted: false,
+				audioMuted: false,
+			};
 		}
 		this.loadData();
+		this.checkCamera();
+	}
+
+	checkCamera() {
+		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+			navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+				console.log(stream);
+			}).catch(function(err0r) {
+				console.log("Something went wrong!");
+			});
+		}
 	}
 
 	onPrevent(event) {

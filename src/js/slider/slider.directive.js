@@ -41,14 +41,6 @@ export class SliderDirective extends Component {
 						break;
 				}
 			});
-			/*
-			agora.state$.pipe(
-				takeUntil(this.unsubscribe$)
-			).subscribe(state => {
-				this.state = state;
-				this.pushChanges();
-			});
-			*/
 		}
 		/*
 		this.slider$().pipe(

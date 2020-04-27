@@ -6,6 +6,7 @@ import { BehaviorSubject, of , Subject } from 'rxjs';
 import { environment } from '../../environment/environment';
 import Emittable from '../emittable/emittable';
 import HttpService from '../http/http.service';
+import LocationService from '../location/location.service';
 
 export const RoleType = {
 	Attendee: 'attendee',
@@ -26,15 +27,23 @@ export const MessageType = {
 
 export default class AgoraService extends Emittable {
 
-	static getSingleton(state) {
-		console.log('getSingleton', state);
+	static getSingleton() {
 		if (!this.AGORA) {
-			this.AGORA = new AgoraService(state);
+			this.AGORA = new AgoraService();
 		}
+		console.log('AgoraService', this.AGORA.state);
 		return this.AGORA;
 	}
 
-	constructor(state) {
+	set state(state) {
+		this.state$.next(state);
+	}
+
+	get state() {
+		return this.state$.getValue();
+	}
+
+	constructor() {
 		if (AgoraService.AGORA) {
 			throw ('AgoraService is a singleton');
 		}
@@ -48,24 +57,21 @@ export default class AgoraService extends Emittable {
 		this.onTokenPrivilegeWillExpire = this.onTokenPrivilegeWillExpire.bind(this);
 		this.onTokenPrivilegeDidExpire = this.onTokenPrivilegeDidExpire.bind(this);
 		this.onMessage = this.onMessage.bind(this);
-		this.state = {
-			role: RoleType.ATTENDEE,
+		const state = {
+			role: LocationService.get('role') || RoleType.Attendee,
+			connecting: false,
 			connected: false,
 			locked: false,
 			control: false,
-			cameraMuted: true,
-			audioMuted: true,
+			cameraMuted: false,
+			audioMuted: false,
 		};
-		if (state) {
-			this.state = Object.assign(this.state, state);
-		}
-		this.state$ = new BehaviorSubject(this.state);
+		this.state$ = new BehaviorSubject(state);
 		this.message$ = new Subject();
 	}
 
-	setState(state) {
-		Object.assign(this.state, state);
-		this.state$.next(this.state);
+	patchState(state) {
+		this.state = Object.assign({}, this.state, state);
 	}
 
 	connect$() {
@@ -132,7 +138,7 @@ export default class AgoraService extends Emittable {
 		client.join(token, environment.channelName, uid, (uid) => {
 			this.uid = uid;
 			// console.log('User ' + uid + ' join channel successfully');
-			this.setState({ connected: true, uid: uid });
+			this.patchState({ connected: true, uid: uid });
 			this.getRtmToken(uid).subscribe(token => {
 				// console.log('token', token);
 				this.joinMessageChannel(token.token, uid).then((success) => {
@@ -243,7 +249,7 @@ export default class AgoraService extends Emittable {
 				video.setAttribute('id', 'agora_local_' + local.streamID);
 				local.play('agora_local_' + local.streamID);
 			}
-			this.setState({ local: this.uid });
+			this.patchState({ local: this.uid });
 			this.publishLocalStream();
 		}, (error) => {
 			console.log('getUserMedia failed', error);
@@ -271,7 +277,7 @@ export default class AgoraService extends Emittable {
 		const client = this.client;
 		client.leave(() => {
 			// console.log('Leave channel successfully');
-			this.setState({ connected: false });
+			this.patchState({ connected: false });
 			const messageChannel = this.messageChannel;
 			const messageClient = this.messageClient;
 			messageChannel.leave();
@@ -287,10 +293,10 @@ export default class AgoraService extends Emittable {
 		if (local && local.video) {
 			if (local.userMuteVideo) {
 				local.unmuteVideo();
-				this.setState({ cameraMuted: false });
+				this.patchState({ cameraMuted: false });
 			} else {
 				local.muteVideo();
-				this.setState({ cameraMuted: true });
+				this.patchState({ cameraMuted: true });
 			}
 		}
 	}
@@ -301,10 +307,10 @@ export default class AgoraService extends Emittable {
 		if (local && local.audio) {
 			if (local.userMuteAudio) {
 				local.unmuteAudio();
-				this.setState({ audioMuted: false });
+				this.patchState({ audioMuted: false });
 			} else {
 				local.muteAudio();
-				this.setState({ audioMuted: true });
+				this.patchState({ audioMuted: true });
 			}
 		}
 	}
@@ -313,12 +319,12 @@ export default class AgoraService extends Emittable {
 		if (this.state.control) {
 			this.sendRemoteControlDismiss().then((control) => {
 				console.log('AgoraService.sendRemoteControlDismiss', control);
-				this.setState({ control: !control });
+				this.patchState({ control: !control });
 			});
 		} else {
 			this.sendRemoteControlRequest().then((control) => {
 				console.log('AgoraService.sendRemoteControlRequest', control);
-				this.setState({ control: control });
+				this.patchState({ control: control });
 			});
 		}
 	}
@@ -414,7 +420,7 @@ export default class AgoraService extends Emittable {
 			this.message$.next(message);
 			switch (message.type) {
 				case MessageType.RequestControlDismiss:
-					this.setState({ locked: false });
+					this.patchState({ locked: false });
 					this.sendMessage({
 						type: MessageType.RequestControlDismissed,
 						rpcid: message.rpcid
@@ -457,7 +463,7 @@ export default class AgoraService extends Emittable {
 			video.setAttribute('id', 'agora_remote_' + id);
 			video.classList.add('playing');
 		}
-		this.setState({ remote: id });
+		this.patchState({ remote: id });
 		// console.log('video', video);
 		stream.play('agora_remote_' + id);
 	}
@@ -474,7 +480,7 @@ export default class AgoraService extends Emittable {
 				video.classList.remove('playing');
 			}
 		}
-		this.setState({ remote: null });
+		this.patchState({ remote: null });
 		// console.log('stream-removed remote-uid: ', id);
 	}
 
@@ -486,9 +492,9 @@ export default class AgoraService extends Emittable {
 			if (video) {
 				video.classList.remove('playing');
 			}
-			this.setState({ remote: null, locked: false, control: false });
+			this.patchState({ remote: null, locked: false, control: false });
 		} else {
-			this.setState({ local: null, locked: false, control: false });
+			this.patchState({ local: null, locked: false, control: false });
 		}
 	}
 

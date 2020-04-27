@@ -1,4 +1,6 @@
 const express = require('express');
+const https = require('https');
+const fs = require('fs');
 const bodyParser = require('body-parser');
 
 const path = require('path');
@@ -36,7 +38,7 @@ app.get('/', (request, response) => response.render('pages/index'));
 // app.set('view engine', 'handlebars');
 
 app.get('/', function(request, response) {
-	response.sendFile(path.join(__dirname + '../../docs/index.html'));
+	response.sendFile(path.join(__dirname, '../../docs/index.html'));
 	// response.render('docs/index');
 });
 
@@ -66,9 +68,20 @@ app.post('/api/token/rtm', function(request, response) {
 	}));
 });
 
+/*
 app.listen(PORT, () => {
 	console.log(`Listening on ${ PORT }`);
 });
+*/
+
+https
+	.createServer({
+		key: fs.readFileSync(path.join(__dirname, '../../certs/client-key.pem'), 'utf8'),
+		cert: fs.readFileSync(path.join(__dirname, '../../certs/client-cert.pem'), 'utf8')
+	}, app)
+	.listen(PORT, function() {
+		console.log(`Example app listening on port ${PORT}! Go to https://192.168.1.2:${PORT}/`);
+	});
 
 // IMPORTANT! Build token with either the uid or with the user account. Comment out the option you do not want to use below.
 

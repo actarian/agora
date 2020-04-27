@@ -6,7 +6,6 @@
 
 'use strict';
 
-var DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
 var environment = {
   appKey: 'ab4289a46cd34da6a61fd8d66774b65f',
   appCertificate: '',
@@ -20,6 +19,10 @@ var environment = {
 };
 
 var express = require('express');
+
+var https = require('https');
+
+var fs = require('fs');
 
 var bodyParser = require('body-parser');
 
@@ -55,7 +58,7 @@ app.get('/', (request, response) => response.render('pages/index'));
 // app.set('view engine', 'handlebars');
 
 app.get('/', function (request, response) {
-  response.sendFile(path.join(__dirname + '../../docs/index.html')); // response.render('docs/index');
+  response.sendFile(path.join(__dirname, '../../docs/index.html')); // response.render('docs/index');
 });
 app.post('/api/token/rtc', function (request, response) {
   var payload = request.body || {};
@@ -81,8 +84,17 @@ app.post('/api/token/rtm', function (request, response) {
     token: token
   }));
 });
-app.listen(PORT, function () {
-  console.log("Listening on " + PORT);
+/*
+app.listen(PORT, () => {
+	console.log(`Listening on ${ PORT }`);
+});
+*/
+
+https.createServer({
+  key: fs.readFileSync(path.join(__dirname, '../../certs/client-key.pem'), 'utf8'),
+  cert: fs.readFileSync(path.join(__dirname, '../../certs/client-cert.pem'), 'utf8')
+}, app).listen(PORT, function () {
+  console.log("Example app listening on port " + PORT + "! Go to https://192.168.1.2:" + PORT + "/");
 }); // IMPORTANT! Build token with either the uid or with the user account. Comment out the option you do not want to use below.
 // Build token with uid
 // const token = RtcTokenBuilder.buildTokenWithUid(environment.appKey, environment.appCertificate, environment.channelName, uid, role, expirationTime);

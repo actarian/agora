@@ -42,7 +42,6 @@
     return self;
   }
 
-  var DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
   var environment = {
     appKey: 'ab4289a46cd34da6a61fd8d66774b65f',
     appCertificate: '',
@@ -119,7 +118,7 @@
   }();
 
   var STATIC = window.location.port === '41999' || window.location.host === 'actarian.github.io';
-  var DEVELOPMENT$1 = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
+  var DEVELOPMENT = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(window.location.host.split(':')[0]) !== -1;
 
   var HttpService = /*#__PURE__*/function () {
     function HttpService() {}
@@ -207,6 +206,79 @@
     return HttpService;
   }();
 
+  var LocationService = /*#__PURE__*/function () {
+    function LocationService() {}
+
+    LocationService.get = function get(key) {
+      var params = new URLSearchParams(window.location.search); // console.log('LocationService.get', params);
+
+      return params.get(key);
+    };
+
+    LocationService.set = function set(keyOrValue, value) {
+      var params = new URLSearchParams(window.location.search);
+
+      if (typeof keyOrValue === 'string') {
+        params.set(keyOrValue, value);
+      } else {
+        params.set(keyOrValue, '');
+      }
+
+      this.replace(params); // console.log('LocationService.set', params, keyOrValue, value);
+    };
+
+    LocationService.replace = function replace(params) {
+      if (window.history && window.history.pushState) {
+        var title = document.title;
+        var url = window.location.href.split('?')[0] + "?" + params.toString();
+        window.history.pushState(params.toString(), title, url);
+      }
+    };
+
+    LocationService.deserialize = function deserialize(key) {
+      var encoded = this.get('params');
+      return this.decode(key, encoded);
+    };
+
+    LocationService.serialize = function serialize(keyOrValue, value) {
+      var params = this.deserialize();
+      var encoded = this.encode(keyOrValue, value, params);
+      this.set('params', encoded);
+    };
+
+    LocationService.decode = function decode(key, encoded) {
+      var decoded = null;
+
+      if (encoded) {
+        var json = window.atob(encoded);
+        decoded = JSON.parse(json);
+      }
+
+      if (key && decoded) {
+        decoded = decoded[key];
+      }
+
+      return decoded || null;
+    };
+
+    LocationService.encode = function encode(keyOrValue, value, params) {
+      params = params || {};
+      var encoded = null;
+
+      if (typeof keyOrValue === 'string') {
+        params[keyOrValue] = value;
+      } else {
+        params = keyOrValue;
+      }
+
+      var json = JSON.stringify(params);
+      encoded = window.btoa(json);
+      return encoded;
+    };
+
+    return LocationService;
+  }();
+
   var RoleType = {
     Attendee: 'attendee',
     Publisher: 'publisher'
@@ -226,17 +298,26 @@
   var AgoraService = /*#__PURE__*/function (_Emittable) {
     _inheritsLoose(AgoraService, _Emittable);
 
-    AgoraService.getSingleton = function getSingleton(state) {
-      console.log('getSingleton', state);
-
+    AgoraService.getSingleton = function getSingleton() {
       if (!this.AGORA) {
-        this.AGORA = new AgoraService(state);
+        this.AGORA = new AgoraService();
       }
 
+      console.log('AgoraService', this.AGORA.state);
       return this.AGORA;
     };
 
-    function AgoraService(state) {
+    _createClass(AgoraService, [{
+      key: "state",
+      set: function set(state) {
+        this.state$.next(state);
+      },
+      get: function get() {
+        return this.state$.getValue();
+      }
+    }]);
+
+    function AgoraService() {
       var _this;
 
       if (AgoraService.AGORA) {
@@ -253,29 +334,24 @@
       _this.onTokenPrivilegeWillExpire = _this.onTokenPrivilegeWillExpire.bind(_assertThisInitialized(_this));
       _this.onTokenPrivilegeDidExpire = _this.onTokenPrivilegeDidExpire.bind(_assertThisInitialized(_this));
       _this.onMessage = _this.onMessage.bind(_assertThisInitialized(_this));
-      _this.state = {
-        role: RoleType.ATTENDEE,
+      var state = {
+        role: LocationService.get('role') || RoleType.Attendee,
+        connecting: false,
         connected: false,
         locked: false,
         control: false,
-        cameraMuted: true,
-        audioMuted: true
+        cameraMuted: false,
+        audioMuted: false
       };
-
-      if (state) {
-        _this.state = Object.assign(_this.state, state);
-      }
-
-      _this.state$ = new rxjs.BehaviorSubject(_this.state);
+      _this.state$ = new rxjs.BehaviorSubject(state);
       _this.message$ = new rxjs.Subject();
       return _this;
     }
 
     var _proto = AgoraService.prototype;
 
-    _proto.setState = function setState(state) {
-      Object.assign(this.state, state);
-      this.state$.next(this.state);
+    _proto.patchState = function patchState(state) {
+      this.state = Object.assign({}, this.state, state);
     };
 
     _proto.connect$ = function connect$() {
@@ -357,7 +433,7 @@
       client.join(token, environment.channelName, uid, function (uid) {
         _this4.uid = uid; // console.log('User ' + uid + ' join channel successfully');
 
-        _this4.setState({
+        _this4.patchState({
           connected: true,
           uid: uid
         });
@@ -491,7 +567,7 @@
           local.play('agora_local_' + local.streamID);
         }
 
-        _this7.setState({
+        _this7.patchState({
           local: _this7.uid
         });
 
@@ -524,7 +600,7 @@
       var client = this.client;
       client.leave(function () {
         // console.log('Leave channel successfully');
-        _this8.setState({
+        _this8.patchState({
           connected: false
         });
 
@@ -544,12 +620,12 @@
       if (local && local.video) {
         if (local.userMuteVideo) {
           local.unmuteVideo();
-          this.setState({
+          this.patchState({
             cameraMuted: false
           });
         } else {
           local.muteVideo();
-          this.setState({
+          this.patchState({
             cameraMuted: true
           });
         }
@@ -563,12 +639,12 @@
       if (local && local.audio) {
         if (local.userMuteAudio) {
           local.unmuteAudio();
-          this.setState({
+          this.patchState({
             audioMuted: false
           });
         } else {
           local.muteAudio();
-          this.setState({
+          this.patchState({
             audioMuted: true
           });
         }
@@ -582,7 +658,7 @@
         this.sendRemoteControlDismiss().then(function (control) {
           console.log('AgoraService.sendRemoteControlDismiss', control);
 
-          _this9.setState({
+          _this9.patchState({
             control: !control
           });
         });
@@ -590,7 +666,7 @@
         this.sendRemoteControlRequest().then(function (control) {
           console.log('AgoraService.sendRemoteControlRequest', control);
 
-          _this9.setState({
+          _this9.patchState({
             control: control
           });
         });
@@ -696,7 +772,7 @@
 
         switch (message.type) {
           case MessageType.RequestControlDismiss:
-            this.setState({
+            this.patchState({
               locked: false
             });
             this.sendMessage({
@@ -745,7 +821,7 @@
         video.classList.add('playing');
       }
 
-      this.setState({
+      this.patchState({
         remote: id
       }); // console.log('video', video);
 
@@ -766,7 +842,7 @@
         }
       }
 
-      this.setState({
+      this.patchState({
         remote: null
       }); // console.log('stream-removed remote-uid: ', id);
     };
@@ -781,13 +857,13 @@
           video.classList.remove('playing');
         }
 
-        this.setState({
+        this.patchState({
           remote: null,
           locked: false,
           control: false
         });
       } else {
-        this.setState({
+        this.patchState({
           local: null,
           locked: false,
           control: false
@@ -815,79 +891,6 @@
   }(Emittable);
 
   var BASE_HREF = document.querySelector('base').getAttribute('href');
-
-  var LocationService = /*#__PURE__*/function () {
-    function LocationService() {}
-
-    LocationService.get = function get(key) {
-      var params = new URLSearchParams(window.location.search); // console.log('LocationService.get', params);
-
-      return params.get(key);
-    };
-
-    LocationService.set = function set(keyOrValue, value) {
-      var params = new URLSearchParams(window.location.search);
-
-      if (typeof keyOrValue === 'string') {
-        params.set(keyOrValue, value);
-      } else {
-        params.set(keyOrValue, '');
-      }
-
-      this.replace(params); // console.log('LocationService.set', params, keyOrValue, value);
-    };
-
-    LocationService.replace = function replace(params) {
-      if (window.history && window.history.pushState) {
-        var title = document.title;
-        var url = window.location.href.split('?')[0] + "?" + params.toString();
-        window.history.pushState(params.toString(), title, url);
-      }
-    };
-
-    LocationService.deserialize = function deserialize(key) {
-      var encoded = this.get('params');
-      return this.decode(key, encoded);
-    };
-
-    LocationService.serialize = function serialize(keyOrValue, value) {
-      var params = this.deserialize();
-      var encoded = this.encode(keyOrValue, value, params);
-      this.set('params', encoded);
-    };
-
-    LocationService.decode = function decode(key, encoded) {
-      var decoded = null;
-
-      if (encoded) {
-        var json = window.atob(encoded);
-        decoded = JSON.parse(json);
-      }
-
-      if (key && decoded) {
-        decoded = decoded[key];
-      }
-
-      return decoded || null;
-    };
-
-    LocationService.encode = function encode(keyOrValue, value, params) {
-      params = params || {};
-      var encoded = null;
-
-      if (typeof keyOrValue === 'string') {
-        params[keyOrValue] = value;
-      } else {
-        params = keyOrValue;
-      }
-
-      var json = JSON.stringify(params);
-      encoded = window.btoa(json);
-      return encoded;
-    };
-
-    return LocationService;
-  }();
 
   var ModalEvent = function ModalEvent(data) {
     this.data = data;
@@ -981,19 +984,9 @@
       this.items = [];
       this.item = null;
       this.form = null;
-      this.state = {
-        role: LocationService.get('role') || RoleType.Attendee,
-        connecting: false,
-        connected: false,
-        locked: false,
-        control: false,
-        cameraMuted: false,
-        audioMuted: false
-      };
 
       {
-        var agora = this.agora = AgoraService.getSingleton(this.state);
-        this.state = agora.state;
+        var agora = this.agora = AgoraService.getSingleton();
         agora.message$.pipe(operators.takeUntil(this.unsubscribe$)).subscribe(function (message) {
           console.log('AppComponent.message', message);
 
@@ -1020,6 +1013,19 @@
       }
 
       this.loadData();
+      this.checkCamera();
+    };
+
+    _proto.checkCamera = function checkCamera() {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+          video: true
+        }).then(function (stream) {
+          console.log(stream);
+        }).catch(function (err0r) {
+          console.log("Something went wrong!");
+        });
+      }
     };
 
     _proto.onPrevent = function onPrevent(event) {
@@ -55732,14 +55738,6 @@ vec4 envMapTexelToLinear(vec4 color) {
               break;
           }
         });
-        /*
-        agora.state$.pipe(
-        	takeUntil(this.unsubscribe$)
-        ).subscribe(state => {
-        	this.state = state;
-        	this.pushChanges();
-        });
-        */
       }
       /*
       this.slider$().pipe(
