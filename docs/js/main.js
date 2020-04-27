@@ -55674,8 +55674,15 @@ vec4 envMapTexelToLinear(vec4 color) {
           callback(gltf.scene);
         } // roughnessMipmapper.dispose();
 
-      }, function (xhr) {
-        _this2.progress = Math.round(xhr.loaded / xhr.total * 100);
+      }, function (progressEvent) {
+        if (progressEvent.loaded && progressEvent.total) {
+          _this2.progress = Math.round(progressEvent.loaded / progressEvent.total * 100);
+        } else {
+          _this2.progress = _this2.progress || 0;
+          _this2.progress = Math.min(100, _this2.progress + 1);
+        }
+
+        console.log(progressEvent.loaded, progressEvent.total);
 
         _this2.pushChanges();
       });
