@@ -433,3 +433,72 @@ body {
 		height: 20px;
 	}
 }
+
+.progress {
+	color: white;
+	font-weight: 900;
+	font-size: 70px;
+	text-shadow: 0 10px 10px rgba(0, 0, 0, 0.5);
+}
+
+@include media-down(sm) {
+
+	.ui__head {
+		.video--remote {
+			width: 160px;
+			height: 120px;
+			margin-right: 15px;
+		}
+
+		.group--select {
+			width: calc(100% - 175px);
+
+			.icon--caret-down {
+				display: none;
+			}
+
+			.nav--dropdown>li>a,
+			.nav--dropdown>li>span {
+				font-size: 12px;
+			}
+		}
+
+		.group--local {
+			display: none;
+		}
+	}
+
+	.control--select {
+		font-size: 15px;
+		text-transform: uppercase;
+		line-height: 1;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.ui__foot {
+
+		.left,
+		.right {
+			flex: 0 1 auto;
+		}
+
+		.center {
+			flex: 1 1 100%;
+		}
+	}
+
+	.btn--ar {
+		font-size: 13px;
+	}
+
+	.btn--cam,
+	.btn--mic {
+		display: none;
+	}
+
+	.btn--heart {
+		margin: 0;
+	}
+}

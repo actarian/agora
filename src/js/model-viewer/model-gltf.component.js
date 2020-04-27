@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+// import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 // import { RoughnessMipmapper } from 'three/examples/jsm/utils/RoughnessMipmapper.js';
 import { environment } from '../../environment/environment';
 import { BASE_HREF } from '../const';
@@ -11,6 +11,7 @@ export class ModelGltfComponent extends ModelComponent {
 
 	onInit() {
 		super.onInit();
+		this.progress = 0;
 		console.log('ModelGltfComponent.onInit');
 	}
 
@@ -27,6 +28,8 @@ export class ModelGltfComponent extends ModelComponent {
 			if (typeof callback === 'function') {
 				callback(mesh);
 			}
+			this.progress = 0;
+			this.pushChanges();
 		});
 		/*
 		this.loadRgbeBackground(BASE_HREF + environment.paths.textures + this.item.envMapFolder, this.item.envMapFile, (envMap) => {
@@ -63,6 +66,7 @@ export class ModelGltfComponent extends ModelComponent {
 	}
 	*/
 
+	/*
 	loadRgbeBackground(path, file, callback) {
 		const scene = this.host.scene;
 		const renderer = this.host.renderer;
@@ -85,6 +89,7 @@ export class ModelGltfComponent extends ModelComponent {
 			});
 		return loader;
 	}
+	*/
 
 	loadGltfModel(path, file, callback) {
 		const renderer = this.host.renderer;
@@ -100,6 +105,9 @@ export class ModelGltfComponent extends ModelComponent {
 				callback(gltf.scene);
 			}
 			// roughnessMipmapper.dispose();
+		}, (xhr) => {
+			this.progress = Math.round(xhr.loaded / xhr.total * 100);
+			this.pushChanges();
 		});
 	}
 
